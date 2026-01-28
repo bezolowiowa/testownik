@@ -516,6 +516,19 @@ function render(){
   document.getElementById("question").innerText = questions[i].q;
   document.getElementById("answer").innerText = questions[i].a;
   document.getElementById("answer").style.display = "none";
+
+  // pokaż oba przyciski na start
+document.getElementById("knowYes").style.display = "inline-block";
+document.getElementById("knowNo").style.display = "inline-block";
+
+// sprawdź czy jest zapis
+const status = progress[questions[i].q];
+if (status === true) {
+  document.getElementById("knowNo").style.display = "none";
+}
+if (status === false) {
+  document.getElementById("knowYes").style.display = "none";
+}
 }
 
 function showAnswer(){document.getElementById("answer").style.display="block";}
