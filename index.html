@@ -97,8 +97,15 @@ button {
 
 <script>
 
-  
 let progress = JSON.parse(localStorage.getItem("progress")) || {};
+function updateStats() {
+  const total = questions.length;
+  const known = Object.values(progress).filter(v => v === true).length;
+  const percent = Math.round((known / total) * 100);
+
+  document.getElementById("stats").innerText =
+    `Opanowane: ${known} / ${total} (${percent}%)`;
+}
 let time = 120;
 let timerInterval = null;
 
@@ -500,6 +507,7 @@ function markKnown(val) {
     document.getElementById("knowNo").style.display = "none";
   } else {
     document.getElementById("knowYes").style.display = "none";
+    updateStats();
   }
 }
 
@@ -512,6 +520,7 @@ function render(){
       <img src='https://i.pinimg.com/474x/48/62/21/486221f9f965ab6df81986f8a9118815.jpg'>
     </div>`;
     return;
+    updateStats();
   }
   document.getElementById("counter").innerText = `Pytanie ${i+1} / ${questions.length}`;
   document.getElementById("question").innerText = questions[i].q;
