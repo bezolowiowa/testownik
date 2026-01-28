@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Testownik – Inżynieria Zarządzania</title>
+<style>
+body{font-family:Arial;background:#f4f4f4;padding:30px}
+.card{background:#fff;padding:30px;border-radius:8px;max-width:1200px;margin:auto;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.counter{color:#666;margin-bottom:10px}
+.question{font-size:22px;margin-bottom:15px;font-weight:bold}
+.answer{display:none;font-size:17px;line-height:1.6;white-space:pre-line}
+button{margin-top:15px;margin-right:10px;padding:10px 18px;font-size:16px}
+.end{text-align:center}
+img{max-width:100%;border-radius:8px;margin-top:20px}
+</style>
+</head>
+<body>
+    
+    
+
+<div id="timer" style="font-size:20px;font-weight:bold;margin-bottom:10px;">
+  ⏱️ 02:00
+</div>
+
+<div class="card" id="card">
+  <div class="counter" id="counter"></div>
+  <div class="question" id="question"></div>
+  <div class="answer" id="answer"></div>
+  <button onclick="showAnswer()">Pokaż odpowiedź</button>
+  <button onclick="next()">Następne</button>
+<div id="knowButtons">
+  <button id="knowYes" onclick="markKnown(true)">✅ Umiem</button>
+  <button id="knowNo" onclick="markKnown(false)">❌ Nie umiem</button>
+</div>
+  
+</div>
+
+<script>
+
+let time = 120;
+let timerInterval = null;
+
+function startTimer() {
+  clearInterval(timerInterval);
+  time = 120;
+  updateTimer();
+
+  timerInterval = setInterval(() => {
+    time--;
+    updateTimer();
+    if (time <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById("timer").innerText = "⏰ Czas minął";
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  const min = String(Math.floor(time / 60)).padStart(2, "0");
+  const sec = String(time % 60).padStart(2, "0");
+  const timerEl = document.getElementById("timer");
+  timerEl.innerText = `⏱️ ${min}:${sec}`;
+  timerEl.style.color = time <= 30 ? "red" : "black";
+}    
+
+let questions = [
+
+{
+q:"1. Prawo popytu i podaży. Paradoksy prawa popytu",
+a:`Prawo popytu mówi, że wraz ze wzrostem ceny dobra – przy niezmienionych pozostałych warunkach – wielkość popytu maleje. Konsumenci ograniczają zakupy lub wybierają substytuty. Prawo podaży oznacza, że wzrost ceny skłania producentów do zwiększania podaży, ponieważ produkcja staje się bardziej opłacalna.
+
+W życiu codziennym widać to np. przy wzroście cen paliwa – część osób ogranicza jazdę samochodem, a stacje paliw zwiększają sprzedaż ze względu na wyższe marże.
+
+Paradoksy prawa popytu obejmują m.in. paradoks Veblena, gdzie wzrost ceny dóbr luksusowych zwiększa popyt, ponieważ cena jest symbolem prestiżu, oraz paradoks Giffena dotyczący dóbr podstawowych w warunkach skrajnego ubóstwa.`
+},
+
+{
+q:"2. Miary aktywności gospodarczej i dobrobytu społecznego",
+a:`Miary aktywności gospodarczej, takie jak PKB, produkcja przemysłowa czy poziom zatrudnienia, pokazują skalę funkcjonowania gospodarki. Miary dobrobytu społecznego, np. HDI, dochód per capita czy dostęp do usług publicznych, odnoszą się do jakości życia społeczeństwa.
+
+W życiu codziennym dobrobyt oznacza nie tylko dochody, ale także możliwość leczenia, edukacji i mieszkania w bezpiecznym otoczeniu.
+
+Z punktu widzenia decyzji inwestycyjnych region może mieć wysoki PKB, ale niski dobrobyt, co utrudnia pozyskanie pracowników i rozwój przedsiębiorstw.`
+},
+
+{
+q:"3. Inflacja – rodzaje i pomiar",
+a:`Inflacja to trwały wzrost ogólnego poziomu cen w gospodarce, prowadzący do spadku siły nabywczej pieniądza. Wyróżnia się inflację popytową, kosztową i oczekiwaną. Najczęściej mierzy się ją wskaźnikiem CPI.
+
+W życiu codziennym inflacja objawia się wzrostem cen żywności, paliwa, energii oraz usług.
+
+Dla przedsiębiorstw inflacja oznacza konieczność aktualizacji cen, kosztorysów i kontraktów długoterminowych.`
+},
+
+{
+q:"4. Pozytywne i negatywne skutki inflacji",
+a:`Inflacja może mieć skutki pozytywne, takie jak zmniejszenie realnej wartości zadłużenia czy pobudzenie konsumpcji. Negatywne skutki to spadek siły nabywczej pieniądza, utrata wartości oszczędności i niepewność planowania.
+
+W życiu codziennym osoby trzymające oszczędności na kontach bez oprocentowania realnie tracą pieniądze.
+
+W przedsiębiorstwach inflacja zwiększa ryzyko inwestycyjne i utrudnia planowanie długoterminowe.`
+},
+
+{
+q:"5. Podaż pracy i popyt na pracę",
+a:`Podaż pracy oznacza liczbę osób gotowych do pracy przy danym poziomie wynagrodzenia, a popyt na pracę to zapotrzebowanie przedsiębiorstw na pracowników.
+
+W życiu codziennym w branżach deficytowych, takich jak IT, popyt przewyższa podaż, co powoduje wzrost wynagrodzeń.
+
+Automatyzacja zmniejsza popyt na pracę fizyczną, a zwiększa zapotrzebowanie na wysoko wykwalifikowanych specjalistów.`
+},
+
+{
+q:"6. Bezrobocie – rodzaje i pomiar",
+a:`Bezrobocie to sytuacja, w której osoby zdolne do pracy i gotowe ją podjąć nie znajdują zatrudnienia. Wyróżnia się bezrobocie frykcyjne, sezonowe, strukturalne i cykliczne.
+
+W życiu codziennym bezrobocie sezonowe występuje np. w turystyce, a strukturalne przy likwidacji zakładów przemysłowych.
+
+Pomiar bezrobocia pozwala państwu prowadzić odpowiednią politykę rynku pracy.`
+},
+
+{
+q:"7. Pozytywne i negatywne skutki bezrobocia",
+a:`Negatywne skutki bezrobocia obejmują spadek dochodów, ubóstwo, wykluczenie społeczne oraz degradację kwalifikacji. Pozytywnym aspektem krótkookresowego bezrobocia frykcyjnego jest lepsze dopasowanie pracowników do stanowisk.
+
+W skali gospodarki wysokie bezrobocie oznacza niewykorzystany potencjał pracy i większe obciążenie systemu socjalnego.`
+},
+
+{
+q:"8. Cykl koniunkturalny – fazy i znaczenie",
+a:`Cykl koniunkturalny obejmuje fazy wzrostu, szczytu, recesji i ożywienia. Oznacza okresowe wahania aktywności gospodarczej.
+
+W życiu codziennym recesja objawia się ograniczeniem zakupów dóbr trwałych, takich jak samochody czy mieszkania.
+
+Firmy w fazie wzrostu inwestują, a w recesji skupiają się na redukcji kosztów i utrzymaniu płynności finansowej.`
+},
+
+{
+q:"9. Polityka fiskalna",
+a:`Polityka fiskalna obejmuje działania państwa w zakresie podatków i wydatków publicznych. Jej celem jest stabilizacja gospodarki oraz redystrybucja dochodów.
+
+W życiu codziennym wpływa na wysokość podatków, świadczeń socjalnych i inwestycji publicznych.
+
+Państwo może pobudzać gospodarkę poprzez obniżki podatków lub zwiększenie wydatków inwestycyjnych.`
+},
+
+{
+q:"10. Polityka monetarna",
+a:`Polityka monetarna prowadzona przez bank centralny dotyczy regulowania podaży pieniądza i poziomu stóp procentowych.
+
+W życiu codziennym zmiany stóp procentowych wpływają na raty kredytów.
+
+Celem polityki monetarnej jest stabilizacja inflacji i systemu finansowego.`
+},
+
+{
+q:"11. Globalizacja – czynniki i konsekwencje",
+a:`Globalizacja to proces integracji gospodarek światowych poprzez handel, przepływ kapitału i technologii.
+
+W życiu codziennym widzimy ją w dostępie do produktów z całego świata.
+
+Dla gospodarki oznacza większą konkurencję, ale także szybszy rozwój technologiczny.`
+},
+
+{
+q:"12. Społeczna odpowiedzialność biznesu (CSR)",
+a:`CSR oznacza odpowiedzialne prowadzenie działalności gospodarczej z uwzględnieniem interesów społecznych i środowiskowych.
+
+W życiu codziennym są to np. ekologiczne opakowania i działania prospołeczne.
+
+Dla firm CSR poprawia wizerunek i ogranicza ryzyko reputacyjne.`
+},
+
+{
+q:"13. Metody analizy strategicznej",
+a:`Analiza strategiczna służy do oceny pozycji przedsiębiorstwa i jego otoczenia. Obejmuje m.in. SWOT, PESTEL, pięć sił Portera i VRIO.
+
+W życiu codziennym przypomina planowanie kariery.
+
+W firmie pozwala ograniczyć ryzyko błędnych decyzji inwestycyjnych.`
+},
+
+{
+q:"14. Formy i typy organizacji produkcji",
+a:`Wyróżnia się produkcję jednostkową, seryjną, masową i ciągłą.
+
+Przykładem z życia są meble na zamówienie i produkcja smartfonów.
+
+Dobór formy wpływa na koszty, elastyczność i jakość.`
+},
+
+{
+q:"15. Fazy planowania jakości",
+a:`Planowanie jakości obejmuje identyfikację wymagań klienta, projektowanie jakości produktu i procesu, wdrożenie oraz doskonalenie.
+
+W życiu codziennym widać to przy projektowaniu sprzętu AGD.
+
+W firmach zapobiega kosztownym reklamacjom.`
+},
+
+{
+q:"16. Raport A3 i metoda 8D",
+a:`A3 to zwięzły raport analizy problemu, a 8D to metodyczne rozwiązywanie problemów jakościowych.
+
+W życiu codziennym przypomina analizę powtarzających się usterek.
+
+W firmach pozwala trwale eliminować przyczyny niezgodności.`
+},
+
+{
+q:"17. Narzędzia zarządzania jakością",
+a:`Tradycyjne narzędzia to Ishikawa i Pareto, a współczesne to Lean i Six Sigma.
+
+Zasada Pareto oznacza, że większość problemów ma niewiele przyczyn.
+
+W firmach poprawiają jakość i redukują koszty.`
+},
+
+{
+q:"18. Decyzje strategiczne w systemie produkcyjnym",
+a:`Dotyczą lokalizacji, technologii i automatyzacji.
+
+W życiu codziennym to wybór miejsca zamieszkania.
+
+W firmach są kosztowne i trudne do odwrócenia.`
+},
+
+{
+q:"19. Normatywy sterowania przepływem produkcji",
+a:`Normatywy takie jak takt, lead time i WIP pozwalają sterować tempem produkcji.
+
+W życiu codziennym widoczne w restauracjach typu fast food.
+
+W firmach eliminują przestoje i nadprodukcję.`
+},
+
+{
+q:"20. Dobór materiałów inżynierskich",
+a:`Dobór materiałów uwzględnia wytrzymałość, koszt, masę i recykling.
+
+W życiu codziennym to wybór materiału patelni.
+
+W firmach decyduje o trwałości i niezawodności produktu.`
+},
+
+,
+{
+q:"21. Trwałość zmęczeniowa elementów maszyn",
+a:`Trwałość zmęczeniowa to zdolność elementu maszynowego do przenoszenia obciążeń zmiennych w czasie bez zniszczenia. Nawet jeśli naprężenia są niższe od granicy wytrzymałości materiału, długotrwałe, cykliczne obciążenia mogą prowadzić do powstania pęknięć i w konsekwencji do awarii elementu.
+
+W życiu codziennym prostym przykładem jest wielokrotne zginanie metalowego drutu – początkowo nie dzieje się nic, ale po wielu cyklach drut pęka.
+
+W praktyce inżynierskiej analiza zmęczeniowa ma kluczowe znaczenie przy projektowaniu wałów, sprężyn, osi czy elementów konstrukcyjnych. Inżynier uwzględnia liczbę cykli pracy, amplitudę obciążeń oraz koncentratory naprężeń, a odpowiedni dobór materiału i obróbki powierzchni zwiększa bezpieczeństwo i trwałość konstrukcji.`
+},
+
+{
+q:"22. Metody i narzędzia oceny kondycji finansowej przedsiębiorstwa",
+a:`Ocena kondycji finansowej przedsiębiorstwa opiera się na analizie sprawozdań finansowych. Stosuje się analizę wskaźnikową, analizę przepływów pieniężnych oraz analizę trendów w czasie. Pozwala to ocenić płynność, rentowność i zadłużenie firmy.
+
+W życiu codziennym podobnie oceniamy własną sytuację finansową – sprawdzamy dochody, wydatki, oszczędności oraz zdolność do spłaty zobowiązań.
+
+Z punktu widzenia inżyniera analiza finansowa jest kluczowa przy podejmowaniu decyzji inwestycyjnych. Przykładowo analiza płynności pokazuje, czy firma jest w stanie finansować bieżącą działalność, a analiza rentowności pozwala ocenić, czy projekt przyniesie oczekiwany zysk.`
+},
+
+{
+q:"23. Znaczenie badań rynkowych i marketingowych w przedsiębiorstwie",
+a:`Badania rynkowe służą do poznania potrzeb klientów, wielkości popytu oraz preferencji konsumentów. Umożliwiają podejmowanie decyzji opartych na danych, a nie wyłącznie na intuicji.
+
+W życiu codziennym firmy badają opinie klientów przed wprowadzeniem nowego produktu, np. nowego smaku jogurtu czy funkcjonalności aplikacji mobilnej.
+
+W praktyce inżynierskiej badania rynkowe pomagają określić wymagania jakościowe produktu, jego cenę oraz zakres funkcjonalności. Dzięki nim możliwe jest projektowanie rozwiązań, które odpowiadają rzeczywistym potrzebom rynku, a nie tylko możliwościom technologicznym przedsiębiorstwa.`
+},
+
+{
+q:"24. Cele i zasady sporządzania planów w przedsiębiorstwie",
+a:`Planowanie w przedsiębiorstwie polega na wyznaczaniu celów oraz określaniu działań potrzebnych do ich realizacji. Wyróżnia się plany strategiczne, taktyczne i operacyjne, które różnią się horyzontem czasowym i szczegółowością.
+
+W życiu codziennym planowanie to np. przygotowanie harmonogramu nauki przed egzaminem lub planowanie budżetu domowego.
+
+Z punktu widzenia inżyniera planowanie umożliwia racjonalne wykorzystanie zasobów, ograniczenie ryzyka oraz kontrolę realizacji celów. Dobrze sporządzony plan uwzględnia terminy, koszty, odpowiedzialności i potencjalne zagrożenia, co zwiększa skuteczność działania organizacji.`
+},
+
+{
+q:"25. Elementy układów elektrycznych i elektronicznych",
+a:`Układy elektryczne i elektroniczne składają się z elementów biernych i czynnych. Do biernych zalicza się rezystory, kondensatory i cewki, które kształtują parametry sygnału. Elementy czynne, takie jak diody, tranzystory i układy scalone, umożliwiają sterowanie przepływem prądu oraz przetwarzanie sygnałów.
+
+W życiu codziennym przykładem jest ładowarka do telefonu, która zawiera układ regulacji napięcia i zabezpieczenia.
+
+W praktyce inżynierskiej prawidłowy dobór elementów układu wpływa na niezawodność, bezpieczeństwo i trwałość urządzenia. Błędy projektowe mogą prowadzić do przegrzewania i awarii.`
+},
+
+{
+q:"26. Różnica między precyzją a dokładnością – podaj przykłady",
+a:`Dokładność oznacza, jak blisko wynik pomiaru znajduje się wartości rzeczywistej, natomiast precyzja określa powtarzalność kolejnych pomiarów. Możliwa jest sytuacja, w której pomiary są precyzyjne, ale niedokładne.
+
+W życiu codziennym przykładem jest waga, która za każdym razem pokazuje ten sam wynik, ale inny niż rzeczywista masa – jest precyzyjna, ale niedokładna.
+
+W pracy inżyniera rozróżnienie to ma kluczowe znaczenie w kontroli jakości. Nawet bardzo powtarzalne pomiary nie mają wartości, jeśli przyrządy nie są skalibrowane, co może prowadzić do błędnych decyzji produkcyjnych.`
+},
+
+{
+q:"27. Język programowania SQL stosowany w systemach bazodanowych",
+a:`SQL to język zapytań służący do zarządzania relacyjnymi bazami danych. Umożliwia tworzenie, modyfikowanie i wyszukiwanie danych za pomocą poleceń takich jak SELECT, INSERT, UPDATE i DELETE.
+
+W życiu codziennym SQL jest wykorzystywany w systemach bankowych, sklepach internetowych oraz aplikacjach mobilnych.
+
+W praktyce inżynierskiej SQL pozwala analizować dane produkcyjne, magazynowe i jakościowe. Dzięki zapytaniom można szybko uzyskać informacje wspierające podejmowanie decyzji zarządczych.`
+},
+
+{
+q:"28. Koncepcja Kaizen i jej zastosowanie w pracy inżynierskiej",
+a:`Kaizen to filozofia ciągłego doskonalenia oparta na małych, systematycznych usprawnieniach realizowanych przez wszystkich pracowników organizacji. Jej celem jest stała poprawa jakości, wydajności i bezpieczeństwa.
+
+W życiu codziennym Kaizen to np. stopniowe ulepszanie organizacji pracy lub nauki poprzez drobne zmiany.
+
+W pracy inżyniera Kaizen przejawia się w zgłaszaniu usprawnień procesów, skracaniu czasów operacji oraz eliminacji marnotrawstwa. Małe zmiany, wprowadzane regularnie, dają znaczące efekty w dłuższej perspektywie.`
+},
+
+{
+q:"29. Konflikty interpersonalne – wewnątrz i międzygrupowe",
+a:`Konflikty interpersonalne mogą występować wewnątrz zespołów lub pomiędzy różnymi grupami w organizacji. Wynikają z różnic interesów, celów lub sposobów komunikacji.
+
+W życiu codziennym konflikty pojawiają się np. podczas pracy zespołowej lub w rodzinie.
+
+W przedsiębiorstwie częste są konflikty między działem produkcji a działem jakości. Rolą inżyniera jest mediacja oparta na faktach i danych, co pozwala znaleźć rozwiązanie korzystne dla całej organizacji.`
+},
+
+{
+q:"30. Rodzaje i metody kontroli procesów produkcyjnych",
+a:`Kontrola procesów produkcyjnych ma na celu zapewnienie zgodności wyrobów z wymaganiami jakościowymi. Wyróżnia się kontrolę wejściową, międzyoperacyjną i końcową. Stosuje się kontrolę 100%, próbkowanie oraz statystyczną kontrolę procesu.
+
+W życiu codziennym kontrola jakości to np. sprawdzanie świeżości produktów spożywczych.
+
+W praktyce inżynierskiej statystyczna kontrola procesu umożliwia wczesne wykrywanie odchyleń i zapobieganie powstawaniu braków, co znacząco obniża koszty jakości.`
+},
+
+{
+q:"31. Systemy CAD / CAM / CAMD – przykłady wykorzystania",
+a:`Systemy CAD służą do projektowania, CAM do przygotowania i sterowania procesem wytwarzania, a CAMD do zintegrowanego projektowania i produkcji.
+
+W życiu codziennym CAD wykorzystywany jest np. do projektowania wnętrz lub mebli.
+
+W pracy inżyniera systemy te skracają czas projektowania, ograniczają liczbę błędów oraz umożliwiają szybkie wprowadzanie zmian konstrukcyjnych.`
+},
+
+{
+q:"32. Diagram Ishikawy i Pareto-Lorenza – zastosowanie",
+a:`Diagram Ishikawy służy do identyfikacji możliwych przyczyn problemu, natomiast diagram Pareto-Lorenza pozwala ustalić, które przyczyny mają największy wpływ na problem.
+
+W życiu codziennym zasada Pareto oznacza, że większość problemów wynika z niewielkiej liczby przyczyn.
+
+W praktyce inżynierskiej narzędzia te pozwalają skoncentrować działania doskonalące na kluczowych źródłach niezgodności, zwiększając skuteczność usprawnień.`
+},
+
+{
+q:"33. Zależność oporu elektrycznego od rozmiarów przewodnika",
+a:`Opór elektryczny przewodnika zależy od jego długości, pola przekroju oraz rodzaju materiału. Im dłuższy przewodnik i mniejszy przekrój, tym większy opór.
+
+W życiu codziennym cienkie przewody szybciej się nagrzewają przy dużym obciążeniu.
+
+W praktyce inżynierskiej właściwy dobór przewodów zapobiega stratom energii, przegrzewaniu instalacji oraz awariom systemów elektrycznych.`
+},
+
+{
+q:"34. Wady i zalety tworzyw sztucznych – recykling materiałowy",
+a:`Tworzywa sztuczne są lekkie, tanie i odporne na korozję, co stanowi ich zaletę. Wadą jest negatywny wpływ na środowisko i trudności w recyklingu.
+
+W życiu codziennym przykładem są butelki PET i opakowania jednorazowe.
+
+W pracy inżyniera coraz częściej uwzględnia się projektowanie produktów z myślą o recyklingu, np. poprzez ograniczanie liczby różnych tworzyw w jednym wyrobie.`
+},
+
+{
+q:"35. Elementy składowe procesu produkcyjnego",
+a:`Proces produkcyjny obejmuje wejścia, proces transformacji oraz wyjścia w postaci produktu lub usługi. Składa się z operacji podstawowych, pomocniczych i kontrolnych.
+
+W życiu codziennym procesem produkcyjnym jest przygotowanie posiłku.
+
+W przedsiębiorstwie właściwa organizacja procesu produkcyjnego wpływa na wydajność, jakość i koszty wytwarzania.`
+},
+
+{
+q:"36. Systemy informatyczne wspomagania produkcji",
+a:`Systemy ERP, MES, SCADA i WMS wspomagają planowanie, sterowanie i monitorowanie procesów produkcyjnych.
+
+W życiu codziennym podobne systemy funkcjonują w logistyce kurierskiej.
+
+W firmach integracja systemów informatycznych pozwala zarządzać produkcją w czasie rzeczywistym i szybko reagować na problemy.`
+},
+
+{
+q:"37. Etapy rekrutacji i selekcji pracowników",
+a:`Rekrutacja i selekcja pracowników obejmuje analizę stanowiska, pozyskanie kandydatów, selekcję CV, rozmowy kwalifikacyjne oraz onboarding.
+
+W życiu codziennym proces ten przypomina wybór wykonawcy usługi.
+
+W praktyce inżynierskiej dobrze przeprowadzona rekrutacja zapewnia kompetentny zespół i stabilność procesów.`
+}, 
+
+{
+q:"38. Normatywy sterowania przepływem produkcji",
+a:`Normatywy sterowania przepływem produkcji to wielkości opisujące sposób i tempo realizacji procesu produkcyjnego. Do najważniejszych należą: czas cyklu, czas realizacji zamówienia (lead time), takt produkcji, poziom zapasu produkcji w toku oraz przepustowość procesu.
+
+W życiu codziennym podobny mechanizm obserwujemy w restauracji typu fast food – liczba zamówień w toku oraz czas ich realizacji wpływają na długość kolejki i zadowolenie klientów.
+
+Z punktu widzenia inżyniera normatywy te pozwalają sterować produkcją w taki sposób, aby uniknąć przestojów i nadmiernych zapasów. Ustalenie właściwego takt time umożliwia dopasowanie liczby stanowisk roboczych do rzeczywistego popytu, a ograniczenie zapasu w toku skraca czas realizacji zamówień i szybciej ujawnia problemy jakościowe.`
+},
+
+{
+q:"39. Zasady doboru materiałów inżynierskich oraz etapy procesu projektowania materiałowego",
+a:`Dobór materiałów inżynierskich polega na wyborze takiego materiału, który najlepiej spełnia wymagania funkcjonalne, ekonomiczne i środowiskowe projektowanego wyrobu. Uwzględnia się m.in. wytrzymałość mechaniczną, masę, odporność na korozję, koszt, dostępność oraz możliwość recyklingu.
+
+W życiu codziennym przykładem jest wybór materiału na patelnię – aluminium, stal nierdzewna lub żeliwo w zależności od przeznaczenia i sposobu użytkowania.
+
+Proces projektowania materiałowego obejmuje określenie wymagań, analizę dostępnych materiałów, ocenę kosztów, wykonanie prototypów i testów oraz wybór materiału końcowego. W praktyce inżynierskiej niewłaściwy dobór materiału może prowadzić do awarii, nadmiernych kosztów lub problemów jakościowych, dlatego decyzja ta ma kluczowe znaczenie dla trwałości i niezawodności produktu.`
+},
+
+{
+q:"40. Cele i zasady sporządzania planów w przedsiębiorstwie",
+a:`Planowanie w przedsiębiorstwie polega na wyznaczaniu celów oraz określaniu działań niezbędnych do ich realizacji. Wyróżnia się plany strategiczne, taktyczne i operacyjne, które różnią się horyzontem czasowym i poziomem szczegółowości.
+
+W życiu codziennym planowanie to np. zaplanowanie budżetu domowego lub harmonogramu nauki przed ważnym egzaminem.
+
+Z punktu widzenia inżyniera planowanie umożliwia racjonalne wykorzystanie zasobów, ograniczenie ryzyka oraz kontrolę realizacji celów. Dobrze sporządzony plan uwzględnia terminy, koszty, odpowiedzialności oraz potencjalne zagrożenia, co zwiększa skuteczność działania organizacji i pozwala uniknąć chaosu organizacyjnego.`
+}
+
+];
+
+questions.sort(()=>Math.random()-0.5);
+let i=0;
+
+function markKnown(val) {
+  if (val === true) {
+    document.getElementById("knowNo").style.display = "none";
+  } else {
+    document.getElementById("knowYes").style.display = "none";
+  }
+}
+
+function render(){
+  if(i>=questions.length){
+    document.getElementById("card").innerHTML=
+    `<div class='end'>
+      <h2>Gratulacje 🎉</h2>
+      <p>Przeszłaś cały testownik.</p>
+      <img src='https://i.pinimg.com/474x/48/62/21/486221f9f965ab6df81986f8a9118815.jpg'>
+    </div>`;
+    return;
+  }
+  document.getElementById("counter").innerText = `Pytanie ${i+1} / ${questions.length}`;
+  document.getElementById("question").innerText = questions[i].q;
+  document.getElementById("answer").innerText = questions[i].a;
+  document.getElementById("answer").style.display = "none";
+}
+
+function showAnswer(){document.getElementById("answer").style.display="block";}
+function next(){i++;render();}
+render();
+</script>
+</body>
+</html>
