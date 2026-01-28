@@ -491,6 +491,10 @@ questions.sort(()=>Math.random()-0.5);
 let i=0;
 
 function markKnown(val) {
+  const key = questions[i].q;     // unikalne pytanie
+  progress[key] = val;            // true / false
+  localStorage.setItem("progress", JSON.stringify(progress));
+
   if (val === true) {
     document.getElementById("knowNo").style.display = "none";
   } else {
