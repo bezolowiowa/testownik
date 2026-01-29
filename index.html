@@ -1,549 +1,1386 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta charset="UTF-8">
-<title>Testownik – Inżynieria Zarządzania</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Testownik – Pytania obrona inżynierska</title>
+
 <style>
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #020617;
+  --bg-soft: rgba(2,6,23,0.7);
+  --border: #1e293b;
+  --text-main: #e5e7eb;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-strong: #0284c7;
+  --success: #16a34a;
+  --danger: #dc2626;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  background: radial-gradient(1200px 600px at 50% -200px, #0b2a4a, var(--bg));
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-/* GŁÓWNY KONTENER – CAŁY EKRAN */
-.card {
-  width: 100vw;
+.app {
   height: 100vh;
-  box-sizing: border-box;
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  background: white;
 }
 
-/* LICZNIK */
-.counter {
-  font-size: 14px;
-  color: #666;
+/* HEADER */
+.header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
 }
 
-/* PYTANIE */
+.header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.stats {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* PROGRESS */
+.progress {
+  margin-top: 10px;
+  height: 6px;
+  background: #020617;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+  transition: width 0.4s ease;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+.card {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 22px;
+}
+
 .question {
   font-size: 22px;
-  font-weight: bold;
-  margin: 12px 0;
+  font-weight: 600;
 }
 
-/* ODPOWIEDŹ */
 .answer {
-  font-size: 18px;
-  line-height: 1.6;
-  margin: 12px 0;
+  display: none;
+  margin-top: 14px;
+  font-size: 17px;
+  line-height: 1.65;
+  color: #cbd5f5;
 }
 
-/* PRZYCISKI */
+.feedback {
+  display: none;
+  margin-top: 12px;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* BOTTOM */
+.bottom {
+  padding: 14px 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
 button {
   width: 100%;
   padding: 14px;
-  font-size: 18px;
-  margin-top: 8px;
+  margin-top: 10px;
+  font-size: 15px;
+  border-radius: 14px;
   border: none;
-  border-radius: 8px;
-  background: #007aff;
-  color: white;
+  background: #1e293b;
+  color: var(--text-main);
 }
 
-/* PRZYCISKI UMIEM / NIE UMIEM */
-#knowButtons button {
-  background: #34c759;
-}
+.show { background: #1e293b; }
+.next { background: var(--accent-strong); color: white; }
+.yes { background: var(--success); color: white; }
+.no { background: var(--danger); color: white; }
 
-#knowNo {
-  background: #ff3b30;
-}
-
-/* KONIEC */
-.end {
-  text-align: center;
-  font-size: 22px;
+.reset {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 </style>
 </head>
+
 <body>
-    
-    
 
-<div id="timer" style="font-size:20px;font-weight:bold;margin-bottom:10px;">
-  ⏱️ 02:00
-</div>
+<div class="app">
+  <div class="header">
+    <h1>Testownik – Pytania obrona inżynierska</h1>
+    <div class="stats" id="stats"></div>
+    <div class="progress">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
 
-<div class="card" id="card">
-  <div class="counter" id="counter"></div>
-  <div id="stats" style="font-size:14px;color:#555;margin-bottom:10px;"></div>
-  <div class="question" id="question"></div>
-  <div class="answer" id="answer"></div>
-  <button onclick="showAnswer()">Pokaż odpowiedź</button>
-  <button onclick="next()">Następne</button>
-<div id="knowButtons">
-  <button id="knowYes" onclick="markKnown(true)">✅ Umiem</button>
-  <button id="knowNo" onclick="markKnown(false)">❌ Nie umiem</button>
-</div>
-  
+  <div class="content">
+    <div class="card">
+      <div class="question" id="question"></div>
+      <div class="answer" id="answer"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <button class="show" id="showBtn">Pokaż odpowiedź</button>
+    <button class="next" id="nextBtn">Następne</button>
+    <button class="yes" id="yesBtn">UMIEM</button>
+    <button class="no" id="noBtn">NIE UMIEM</button>
+    <button class="reset" id="resetBtn">Reset postępów</button>
+  </div>
 </div>
 
 <script>
+/* ===== TU WKLEJASZ SWOJĄ TABLICĘ baseQuestions 1:1 ===== */
+
+const baseQuestions = [
+{ q: "1. PRAWO POPYTU I PODAŻY. PARADOKSY PRAWA POPYTU",
+                                        a: `Definicja:
+Prawo popytu i podaży jest podstawowym prawem ekonomii opisującym mechanizm kształtowania się ceny rynkowej jako wyniku interakcji między wielkością popytu zgłaszanego przez konsumentów a wielkością podaży oferowanej przez producentów, przy założeniu racjonalności podmiotów gospodarczych oraz ceteris paribus.
+
+Z punktu widzenia inżyniera zarządzania jest to mechanizm regulacyjny rynku, który pozwala przewidywać zachowania klientów oraz planować wielkość produkcji.
 
-let progress = JSON.parse(localStorage.getItem("progress")) || {};
-function updateStats() {
-  const total = questions.length;
-  const known = Object.values(progress).filter(v => v === true).length;
-  const percent = Math.round((known / total) * 100);
+Mechanizm:
+– wzrost ceny → spadek popytu, wzrost podaży
+– spadek ceny → wzrost popytu, spadek podaży
+Cena równowagi to punkt, w którym popyt = podaż.
+
+Paradoksy popytu:
+– paradoks Giffena (wzrost ceny powoduje wzrost popytu na dobra niższego rzędu)
+– paradoks Veblena (dobra luksusowe – wysoka cena zwiększa prestiż i popyt)
+
+Przykład z życia:
+W czasie wzrostu cen masła część konsumentów ogranicza jego zakup, ale osoby o niskich dochodach mogą kupować go więcej, rezygnując z droższych substytutów – to przykład dobra Giffena.
+
+Przykład z firmy:
+Firma produkująca smartfony premium utrzymuje wysoką cenę, ponieważ obniżenie jej mogłoby obniżyć prestiż marki i popyt – klasyczny efekt Veblena.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania prawo popytu i podaży stanowi podstawę decyzji cenowych i planistycznych w przedsiębiorstwie.”`
+                                    },
+
+                                    {
+                                        q: "2. MIARY POZIOMU AKTYWNOŚCI GOSPODARCZEJ I DOBROBYTU SPOŁECZNEGO",
+                                        a: `Definicja:
+Miary poziomu aktywności gospodarczej to wskaźniki ilościowe opisujące skalę, strukturę i dynamikę procesów gospodarczych zachodzących w danym kraju. Miary dobrobytu społecznego służą natomiast do oceny jakości życia ludności, uwzględniając nie tylko produkcję, ale także aspekty społeczne.
+
+Miary aktywności gospodarczej:
+– PKB (Produkt Krajowy Brutto) – łączna wartość dóbr i usług finalnych wytworzonych na terytorium kraju w danym okresie.
+– PNB (Produkt Narodowy Brutto) – wartość dóbr i usług wytworzonych przez obywateli danego kraju, niezależnie od miejsca produkcji.
+– Stopa inwestycji – relacja nakładów inwestycyjnych do PKB, pokazująca skłonność gospodarki do rozwoju.
+– Produkcja przemysłowa – miara bieżącej aktywności sektora przemysłowego.
+
+Miary dobrobytu społecznego:
+– HDI (Human Development Index) – syntetyczny wskaźnik rozwoju społecznego uwzględniający dochód, edukację i długość życia.
+– PKB per capita – PKB przypadające na jednego mieszkańca, przybliżona miara poziomu życia.
+– Wskaźnik Giniego – miara nierówności dochodowych w społeczeństwie.
+– Poziom bezrobocia – procent osób aktywnych zawodowo pozostających bez pracy.
+
+Przykład z życia:
+Kraj może notować wysoki PKB, ale niski HDI, co oznacza, że wzrost gospodarczy nie przekłada się na jakość życia obywateli.
+
+Przykład z firmy:
+Międzynarodowa korporacja analizuje PKB i stopę inwestycji przy wyborze lokalizacji zakładu, a HDI przy ocenie dostępności wykwalifikowanej kadry.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania kluczowe jest równoległe analizowanie wzrostu gospodarczego i realnego dobrobytu społecznego.”
+
+„Inżynier zarządzania analizuje zarówno twarde wskaźniki makroekonomiczne, jak i społeczne efekty wzrostu gospodarczego.”`
+                                    },
+
+                                    {
+                                        q: "3. INFLACJA – DEFINICJA, RODZAJE I POMIAR",
+                                        a: `Definicja:
+Inflacja to długotrwały i powszechny wzrost ogólnego poziomu cen dóbr i usług w gospodarce, prowadzący do spadku siły nabywczej pieniądza. Z punktu widzenia inżyniera zarządzania inflacja jest kluczowym czynnikiem ryzyka wpływającym na koszty, ceny, wynagrodzenia oraz decyzje inwestycyjne.
+
+Rodzaje inflacji:
+– inflacja popytowa – wynikająca z nadmiernego popytu w gospodarce w stosunku do podaży.
+– inflacja kosztowa – spowodowana wzrostem kosztów produkcji, np. energii lub pracy.
+– inflacja strukturalna – związana z niedostosowaniami strukturalnymi gospodarki.
+– inflacja pełzająca, krocząca, galopująca oraz hiperinflacja – klasyfikacja według tempa wzrostu cen.
+
+Pomiar inflacji:
+– CPI (Consumer Price Index, wskaźnik cen towarów i usług konsumpcyjnych) – mierzy zmiany cen koszyka dóbr nabywanych przez gospodarstwa domowe.
+– Deflator PKB – mierzy zmiany cen wszystkich dóbr i usług finalnych wytwarzanych w gospodarce.
+
+Przykład z życia:
+Wzrost cen energii elektrycznej powoduje wzrost kosztów życia i obniżenie realnej wartości wynagrodzeń.
+
+Przykład z firmy:
+Przedsiębiorstwo produkcyjne wprowadza klauzule waloryzacyjne w umowach długoterminowych.
+
+Zdanie-klucz:
+„Inflacja jest czynnikiem makroekonomicznym, który bezpośrednio wpływa na stabilność planowania przedsiębiorstwa.”`
+                                    },
+
+                                    {
+                                        q: "4. POZYTYWNE I NEGATYWNE SKUTKI INFLACJI",
+                                        a: `Definicja:
+Skutki inflacji to ekonomiczne i społeczne konsekwencje długotrwałego wzrostu poziomu cen, oddziałujące na gospodarstwa domowe, przedsiębiorstwa oraz sektor publiczny.
+
+Pozytywne skutki inflacji:
+– zmniejszenie realnej wartości zadłużenia, co sprzyja kredytobiorcom,
+– pobudzanie konsumpcji i inwestycji poprzez zachęcanie do szybszego wydatkowania środków,
+– możliwość elastyczniejszego dostosowania płac realnych.
+
+Negatywne skutki inflacji:
+– spadek siły nabywczej pieniądza,
+– wzrost niepewności ekonomicznej,
+– dezorganizacja procesów planistycznych,
+– niekorzystny wpływ na osoby o stałych dochodach.
+
+Przykład z życia:
+Osoby otrzymujące stałą emeryturę odczuwają spadek realnej wartości świadczeń w warunkach wysokiej inflacji.
+
+Przykład z firmy:
+Wzrost cen surowców i energii powoduje presję na podnoszenie cen wyrobów gotowych oraz renegocjację kontraktów.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania inflacja jest zjawiskiem, które wymaga aktywnego zarządzania ryzykiem finansowym.”`
+                                    },
 
-  document.getElementById("stats").innerText =
-    `Opanowane: ${known} / ${total} (${percent}%)`;
-}
-let time = 120;
-let timerInterval = null;
+                                    {
+                                        q: "5. PODAŻ PRACY I POPYT NA PRACĘ. CZYNNIKI KSZTAŁTUJĄCE",
+                                        a: `Definicja:
+Podaż pracy oznacza liczbę osób zdolnych i gotowych do podjęcia pracy przy określonym poziomie wynagrodzeń, natomiast popyt na pracę to zapotrzebowanie przedsiębiorstw na pracowników o określonych kwalifikacjach i kompetencjach.
 
-function startTimer() {
-  clearInterval(timerInterval);
-  time = 120;
-  updateTimer();
-
-  timerInterval = setInterval(() => {
-    time--;
-    updateTimer();
-    if (time <= 0) {
-      clearInterval(timerInterval);
-      document.getElementById("timer").innerText = "⏰ Czas minął";
-    }
-  }, 1000);
-}
-
-function updateTimer() {
-  const min = String(Math.floor(time / 60)).padStart(2, "0");
-  const sec = String(time % 60).padStart(2, "0");
-  const timerEl = document.getElementById("timer");
-  timerEl.innerText = `⏱️ ${min}:${sec}`;
-  timerEl.style.color = time <= 30 ? "red" : "black";
-}    
-
-let questions = [
-
-{
-q:"1. Prawo popytu i podaży. Paradoksy prawa popytu",
-a:`Prawo popytu mówi, że wraz ze wzrostem ceny dobra – przy niezmienionych pozostałych warunkach – wielkość popytu maleje. Konsumenci ograniczają zakupy lub wybierają substytuty. Prawo podaży oznacza, że wzrost ceny skłania producentów do zwiększania podaży, ponieważ produkcja staje się bardziej opłacalna.
-
-W życiu codziennym widać to np. przy wzroście cen paliwa – część osób ogranicza jazdę samochodem, a stacje paliw zwiększają sprzedaż ze względu na wyższe marże.
-
-Paradoksy prawa popytu obejmują m.in. paradoks Veblena, gdzie wzrost ceny dóbr luksusowych zwiększa popyt, ponieważ cena jest symbolem prestiżu, oraz paradoks Giffena dotyczący dóbr podstawowych w warunkach skrajnego ubóstwa.`
-},
-
-{
-q:"2. Miary aktywności gospodarczej i dobrobytu społecznego",
-a:`Miary aktywności gospodarczej, takie jak PKB, produkcja przemysłowa czy poziom zatrudnienia, pokazują skalę funkcjonowania gospodarki. Miary dobrobytu społecznego, np. HDI, dochód per capita czy dostęp do usług publicznych, odnoszą się do jakości życia społeczeństwa.
-
-W życiu codziennym dobrobyt oznacza nie tylko dochody, ale także możliwość leczenia, edukacji i mieszkania w bezpiecznym otoczeniu.
-
-Z punktu widzenia decyzji inwestycyjnych region może mieć wysoki PKB, ale niski dobrobyt, co utrudnia pozyskanie pracowników i rozwój przedsiębiorstw.`
-},
-
-{
-q:"3. Inflacja – rodzaje i pomiar",
-a:`Inflacja to trwały wzrost ogólnego poziomu cen w gospodarce, prowadzący do spadku siły nabywczej pieniądza. Wyróżnia się inflację popytową, kosztową i oczekiwaną. Najczęściej mierzy się ją wskaźnikiem CPI.
-
-W życiu codziennym inflacja objawia się wzrostem cen żywności, paliwa, energii oraz usług.
-
-Dla przedsiębiorstw inflacja oznacza konieczność aktualizacji cen, kosztorysów i kontraktów długoterminowych.`
-},
-
-{
-q:"4. Pozytywne i negatywne skutki inflacji",
-a:`Inflacja może mieć skutki pozytywne, takie jak zmniejszenie realnej wartości zadłużenia czy pobudzenie konsumpcji. Negatywne skutki to spadek siły nabywczej pieniądza, utrata wartości oszczędności i niepewność planowania.
-
-W życiu codziennym osoby trzymające oszczędności na kontach bez oprocentowania realnie tracą pieniądze.
-
-W przedsiębiorstwach inflacja zwiększa ryzyko inwestycyjne i utrudnia planowanie długoterminowe.`
-},
-
-{
-q:"5. Podaż pracy i popyt na pracę",
-a:`Podaż pracy oznacza liczbę osób gotowych do pracy przy danym poziomie wynagrodzenia, a popyt na pracę to zapotrzebowanie przedsiębiorstw na pracowników.
-
-W życiu codziennym w branżach deficytowych, takich jak IT, popyt przewyższa podaż, co powoduje wzrost wynagrodzeń.
-
-Automatyzacja zmniejsza popyt na pracę fizyczną, a zwiększa zapotrzebowanie na wysoko wykwalifikowanych specjalistów.`
-},
-
-{
-q:"6. Bezrobocie – rodzaje i pomiar",
-a:`Bezrobocie to sytuacja, w której osoby zdolne do pracy i gotowe ją podjąć nie znajdują zatrudnienia. Wyróżnia się bezrobocie frykcyjne, sezonowe, strukturalne i cykliczne.
-
-W życiu codziennym bezrobocie sezonowe występuje np. w turystyce, a strukturalne przy likwidacji zakładów przemysłowych.
-
-Pomiar bezrobocia pozwala państwu prowadzić odpowiednią politykę rynku pracy.`
-},
-
-{
-q:"7. Pozytywne i negatywne skutki bezrobocia",
-a:`Negatywne skutki bezrobocia obejmują spadek dochodów, ubóstwo, wykluczenie społeczne oraz degradację kwalifikacji. Pozytywnym aspektem krótkookresowego bezrobocia frykcyjnego jest lepsze dopasowanie pracowników do stanowisk.
-
-W skali gospodarki wysokie bezrobocie oznacza niewykorzystany potencjał pracy i większe obciążenie systemu socjalnego.`
-},
-
-{
-q:"8. Cykl koniunkturalny – fazy i znaczenie",
-a:`Cykl koniunkturalny obejmuje fazy wzrostu, szczytu, recesji i ożywienia. Oznacza okresowe wahania aktywności gospodarczej.
-
-W życiu codziennym recesja objawia się ograniczeniem zakupów dóbr trwałych, takich jak samochody czy mieszkania.
-
-Firmy w fazie wzrostu inwestują, a w recesji skupiają się na redukcji kosztów i utrzymaniu płynności finansowej.`
-},
-
-{
-q:"9. Polityka fiskalna",
-a:`Polityka fiskalna obejmuje działania państwa w zakresie podatków i wydatków publicznych. Jej celem jest stabilizacja gospodarki oraz redystrybucja dochodów.
-
-W życiu codziennym wpływa na wysokość podatków, świadczeń socjalnych i inwestycji publicznych.
-
-Państwo może pobudzać gospodarkę poprzez obniżki podatków lub zwiększenie wydatków inwestycyjnych.`
-},
-
-{
-q:"10. Polityka monetarna",
-a:`Polityka monetarna prowadzona przez bank centralny dotyczy regulowania podaży pieniądza i poziomu stóp procentowych.
-
-W życiu codziennym zmiany stóp procentowych wpływają na raty kredytów.
-
-Celem polityki monetarnej jest stabilizacja inflacji i systemu finansowego.`
-},
-
-{
-q:"11. Globalizacja – czynniki i konsekwencje",
-a:`Globalizacja to proces integracji gospodarek światowych poprzez handel, przepływ kapitału i technologii.
-
-W życiu codziennym widzimy ją w dostępie do produktów z całego świata.
-
-Dla gospodarki oznacza większą konkurencję, ale także szybszy rozwój technologiczny.`
-},
-
-{
-q:"12. Społeczna odpowiedzialność biznesu (CSR)",
-a:`CSR oznacza odpowiedzialne prowadzenie działalności gospodarczej z uwzględnieniem interesów społecznych i środowiskowych.
-
-W życiu codziennym są to np. ekologiczne opakowania i działania prospołeczne.
-
-Dla firm CSR poprawia wizerunek i ogranicza ryzyko reputacyjne.`
-},
-
-{
-q:"13. Metody analizy strategicznej",
-a:`Analiza strategiczna służy do oceny pozycji przedsiębiorstwa i jego otoczenia. Obejmuje m.in. SWOT, PESTEL, pięć sił Portera i VRIO.
-
-W życiu codziennym przypomina planowanie kariery.
-
-W firmie pozwala ograniczyć ryzyko błędnych decyzji inwestycyjnych.`
-},
-
-{
-q:"14. Formy i typy organizacji produkcji",
-a:`Wyróżnia się produkcję jednostkową, seryjną, masową i ciągłą.
-
-Przykładem z życia są meble na zamówienie i produkcja smartfonów.
-
-Dobór formy wpływa na koszty, elastyczność i jakość.`
-},
-
-{
-q:"15. Fazy planowania jakości",
-a:`Planowanie jakości obejmuje identyfikację wymagań klienta, projektowanie jakości produktu i procesu, wdrożenie oraz doskonalenie.
-
-W życiu codziennym widać to przy projektowaniu sprzętu AGD.
-
-W firmach zapobiega kosztownym reklamacjom.`
-},
-
-{
-q:"16. Raport A3 i metoda 8D",
-a:`A3 to zwięzły raport analizy problemu, a 8D to metodyczne rozwiązywanie problemów jakościowych.
-
-W życiu codziennym przypomina analizę powtarzających się usterek.
-
-W firmach pozwala trwale eliminować przyczyny niezgodności.`
-},
-
-{
-q:"17. Narzędzia zarządzania jakością",
-a:`Tradycyjne narzędzia to Ishikawa i Pareto, a współczesne to Lean i Six Sigma.
-
-Zasada Pareto oznacza, że większość problemów ma niewiele przyczyn.
-
-W firmach poprawiają jakość i redukują koszty.`
-},
-
-{
-q:"18. Decyzje strategiczne w systemie produkcyjnym",
-a:`Dotyczą lokalizacji, technologii i automatyzacji.
-
-W życiu codziennym to wybór miejsca zamieszkania.
-
-W firmach są kosztowne i trudne do odwrócenia.`
-},
-
-{
-q:"19. Normatywy sterowania przepływem produkcji",
-a:`Normatywy takie jak takt, lead time i WIP pozwalają sterować tempem produkcji.
-
-W życiu codziennym widoczne w restauracjach typu fast food.
-
-W firmach eliminują przestoje i nadprodukcję.`
-},
-
-{
-q:"20. Dobór materiałów inżynierskich",
-a:`Dobór materiałów uwzględnia wytrzymałość, koszt, masę i recykling.
-
-W życiu codziennym to wybór materiału patelni.
-
-W firmach decyduje o trwałości i niezawodności produktu.`
-},
-
-,
-{
-q:"21. Trwałość zmęczeniowa elementów maszyn",
-a:`Trwałość zmęczeniowa to zdolność elementu maszynowego do przenoszenia obciążeń zmiennych w czasie bez zniszczenia. Nawet jeśli naprężenia są niższe od granicy wytrzymałości materiału, długotrwałe, cykliczne obciążenia mogą prowadzić do powstania pęknięć i w konsekwencji do awarii elementu.
-
-W życiu codziennym prostym przykładem jest wielokrotne zginanie metalowego drutu – początkowo nie dzieje się nic, ale po wielu cyklach drut pęka.
-
-W praktyce inżynierskiej analiza zmęczeniowa ma kluczowe znaczenie przy projektowaniu wałów, sprężyn, osi czy elementów konstrukcyjnych. Inżynier uwzględnia liczbę cykli pracy, amplitudę obciążeń oraz koncentratory naprężeń, a odpowiedni dobór materiału i obróbki powierzchni zwiększa bezpieczeństwo i trwałość konstrukcji.`
-},
-
-{
-q:"22. Metody i narzędzia oceny kondycji finansowej przedsiębiorstwa",
-a:`Ocena kondycji finansowej przedsiębiorstwa opiera się na analizie sprawozdań finansowych. Stosuje się analizę wskaźnikową, analizę przepływów pieniężnych oraz analizę trendów w czasie. Pozwala to ocenić płynność, rentowność i zadłużenie firmy.
-
-W życiu codziennym podobnie oceniamy własną sytuację finansową – sprawdzamy dochody, wydatki, oszczędności oraz zdolność do spłaty zobowiązań.
-
-Z punktu widzenia inżyniera analiza finansowa jest kluczowa przy podejmowaniu decyzji inwestycyjnych. Przykładowo analiza płynności pokazuje, czy firma jest w stanie finansować bieżącą działalność, a analiza rentowności pozwala ocenić, czy projekt przyniesie oczekiwany zysk.`
-},
-
-{
-q:"23. Znaczenie badań rynkowych i marketingowych w przedsiębiorstwie",
-a:`Badania rynkowe służą do poznania potrzeb klientów, wielkości popytu oraz preferencji konsumentów. Umożliwiają podejmowanie decyzji opartych na danych, a nie wyłącznie na intuicji.
-
-W życiu codziennym firmy badają opinie klientów przed wprowadzeniem nowego produktu, np. nowego smaku jogurtu czy funkcjonalności aplikacji mobilnej.
-
-W praktyce inżynierskiej badania rynkowe pomagają określić wymagania jakościowe produktu, jego cenę oraz zakres funkcjonalności. Dzięki nim możliwe jest projektowanie rozwiązań, które odpowiadają rzeczywistym potrzebom rynku, a nie tylko możliwościom technologicznym przedsiębiorstwa.`
-},
-
-{
-q:"24. Cele i zasady sporządzania planów w przedsiębiorstwie",
-a:`Planowanie w przedsiębiorstwie polega na wyznaczaniu celów oraz określaniu działań potrzebnych do ich realizacji. Wyróżnia się plany strategiczne, taktyczne i operacyjne, które różnią się horyzontem czasowym i szczegółowością.
-
-W życiu codziennym planowanie to np. przygotowanie harmonogramu nauki przed egzaminem lub planowanie budżetu domowego.
-
-Z punktu widzenia inżyniera planowanie umożliwia racjonalne wykorzystanie zasobów, ograniczenie ryzyka oraz kontrolę realizacji celów. Dobrze sporządzony plan uwzględnia terminy, koszty, odpowiedzialności i potencjalne zagrożenia, co zwiększa skuteczność działania organizacji.`
-},
-
-{
-q:"25. Elementy układów elektrycznych i elektronicznych",
-a:`Układy elektryczne i elektroniczne składają się z elementów biernych i czynnych. Do biernych zalicza się rezystory, kondensatory i cewki, które kształtują parametry sygnału. Elementy czynne, takie jak diody, tranzystory i układy scalone, umożliwiają sterowanie przepływem prądu oraz przetwarzanie sygnałów.
-
-W życiu codziennym przykładem jest ładowarka do telefonu, która zawiera układ regulacji napięcia i zabezpieczenia.
-
-W praktyce inżynierskiej prawidłowy dobór elementów układu wpływa na niezawodność, bezpieczeństwo i trwałość urządzenia. Błędy projektowe mogą prowadzić do przegrzewania i awarii.`
-},
-
-{
-q:"26. Różnica między precyzją a dokładnością – podaj przykłady",
-a:`Dokładność oznacza, jak blisko wynik pomiaru znajduje się wartości rzeczywistej, natomiast precyzja określa powtarzalność kolejnych pomiarów. Możliwa jest sytuacja, w której pomiary są precyzyjne, ale niedokładne.
-
-W życiu codziennym przykładem jest waga, która za każdym razem pokazuje ten sam wynik, ale inny niż rzeczywista masa – jest precyzyjna, ale niedokładna.
-
-W pracy inżyniera rozróżnienie to ma kluczowe znaczenie w kontroli jakości. Nawet bardzo powtarzalne pomiary nie mają wartości, jeśli przyrządy nie są skalibrowane, co może prowadzić do błędnych decyzji produkcyjnych.`
-},
-
-{
-q:"27. Język programowania SQL stosowany w systemach bazodanowych",
-a:`SQL to język zapytań służący do zarządzania relacyjnymi bazami danych. Umożliwia tworzenie, modyfikowanie i wyszukiwanie danych za pomocą poleceń takich jak SELECT, INSERT, UPDATE i DELETE.
-
-W życiu codziennym SQL jest wykorzystywany w systemach bankowych, sklepach internetowych oraz aplikacjach mobilnych.
-
-W praktyce inżynierskiej SQL pozwala analizować dane produkcyjne, magazynowe i jakościowe. Dzięki zapytaniom można szybko uzyskać informacje wspierające podejmowanie decyzji zarządczych.`
-},
-
-{
-q:"28. Koncepcja Kaizen i jej zastosowanie w pracy inżynierskiej",
-a:`Kaizen to filozofia ciągłego doskonalenia oparta na małych, systematycznych usprawnieniach realizowanych przez wszystkich pracowników organizacji. Jej celem jest stała poprawa jakości, wydajności i bezpieczeństwa.
-
-W życiu codziennym Kaizen to np. stopniowe ulepszanie organizacji pracy lub nauki poprzez drobne zmiany.
-
-W pracy inżyniera Kaizen przejawia się w zgłaszaniu usprawnień procesów, skracaniu czasów operacji oraz eliminacji marnotrawstwa. Małe zmiany, wprowadzane regularnie, dają znaczące efekty w dłuższej perspektywie.`
-},
-
-{
-q:"29. Konflikty interpersonalne – wewnątrz i międzygrupowe",
-a:`Konflikty interpersonalne mogą występować wewnątrz zespołów lub pomiędzy różnymi grupami w organizacji. Wynikają z różnic interesów, celów lub sposobów komunikacji.
-
-W życiu codziennym konflikty pojawiają się np. podczas pracy zespołowej lub w rodzinie.
-
-W przedsiębiorstwie częste są konflikty między działem produkcji a działem jakości. Rolą inżyniera jest mediacja oparta na faktach i danych, co pozwala znaleźć rozwiązanie korzystne dla całej organizacji.`
-},
-
-{
-q:"30. Rodzaje i metody kontroli procesów produkcyjnych",
-a:`Kontrola procesów produkcyjnych ma na celu zapewnienie zgodności wyrobów z wymaganiami jakościowymi. Wyróżnia się kontrolę wejściową, międzyoperacyjną i końcową. Stosuje się kontrolę 100%, próbkowanie oraz statystyczną kontrolę procesu.
-
-W życiu codziennym kontrola jakości to np. sprawdzanie świeżości produktów spożywczych.
-
-W praktyce inżynierskiej statystyczna kontrola procesu umożliwia wczesne wykrywanie odchyleń i zapobieganie powstawaniu braków, co znacząco obniża koszty jakości.`
-},
-
-{
-q:"31. Systemy CAD / CAM / CAMD – przykłady wykorzystania",
-a:`Systemy CAD służą do projektowania, CAM do przygotowania i sterowania procesem wytwarzania, a CAMD do zintegrowanego projektowania i produkcji.
-
-W życiu codziennym CAD wykorzystywany jest np. do projektowania wnętrz lub mebli.
-
-W pracy inżyniera systemy te skracają czas projektowania, ograniczają liczbę błędów oraz umożliwiają szybkie wprowadzanie zmian konstrukcyjnych.`
-},
-
-{
-q:"32. Diagram Ishikawy i Pareto-Lorenza – zastosowanie",
-a:`Diagram Ishikawy służy do identyfikacji możliwych przyczyn problemu, natomiast diagram Pareto-Lorenza pozwala ustalić, które przyczyny mają największy wpływ na problem.
-
-W życiu codziennym zasada Pareto oznacza, że większość problemów wynika z niewielkiej liczby przyczyn.
-
-W praktyce inżynierskiej narzędzia te pozwalają skoncentrować działania doskonalące na kluczowych źródłach niezgodności, zwiększając skuteczność usprawnień.`
-},
-
-{
-q:"33. Zależność oporu elektrycznego od rozmiarów przewodnika",
-a:`Opór elektryczny przewodnika zależy od jego długości, pola przekroju oraz rodzaju materiału. Im dłuższy przewodnik i mniejszy przekrój, tym większy opór.
-
-W życiu codziennym cienkie przewody szybciej się nagrzewają przy dużym obciążeniu.
-
-W praktyce inżynierskiej właściwy dobór przewodów zapobiega stratom energii, przegrzewaniu instalacji oraz awariom systemów elektrycznych.`
-},
-
-{
-q:"34. Wady i zalety tworzyw sztucznych – recykling materiałowy",
-a:`Tworzywa sztuczne są lekkie, tanie i odporne na korozję, co stanowi ich zaletę. Wadą jest negatywny wpływ na środowisko i trudności w recyklingu.
-
-W życiu codziennym przykładem są butelki PET i opakowania jednorazowe.
-
-W pracy inżyniera coraz częściej uwzględnia się projektowanie produktów z myślą o recyklingu, np. poprzez ograniczanie liczby różnych tworzyw w jednym wyrobie.`
-},
-
-{
-q:"35. Elementy składowe procesu produkcyjnego",
-a:`Proces produkcyjny obejmuje wejścia, proces transformacji oraz wyjścia w postaci produktu lub usługi. Składa się z operacji podstawowych, pomocniczych i kontrolnych.
-
-W życiu codziennym procesem produkcyjnym jest przygotowanie posiłku.
-
-W przedsiębiorstwie właściwa organizacja procesu produkcyjnego wpływa na wydajność, jakość i koszty wytwarzania.`
-},
-
-{
-q:"36. Systemy informatyczne wspomagania produkcji",
-a:`Systemy ERP, MES, SCADA i WMS wspomagają planowanie, sterowanie i monitorowanie procesów produkcyjnych.
-
-W życiu codziennym podobne systemy funkcjonują w logistyce kurierskiej.
-
-W firmach integracja systemów informatycznych pozwala zarządzać produkcją w czasie rzeczywistym i szybko reagować na problemy.`
-},
-
-{
-q:"37. Etapy rekrutacji i selekcji pracowników",
-a:`Rekrutacja i selekcja pracowników obejmuje analizę stanowiska, pozyskanie kandydatów, selekcję CV, rozmowy kwalifikacyjne oraz onboarding.
-
-W życiu codziennym proces ten przypomina wybór wykonawcy usługi.
-
-W praktyce inżynierskiej dobrze przeprowadzona rekrutacja zapewnia kompetentny zespół i stabilność procesów.`
-}, 
-
-{
-q:"38. Normatywy sterowania przepływem produkcji",
-a:`Normatywy sterowania przepływem produkcji to wielkości opisujące sposób i tempo realizacji procesu produkcyjnego. Do najważniejszych należą: czas cyklu, czas realizacji zamówienia (lead time), takt produkcji, poziom zapasu produkcji w toku oraz przepustowość procesu.
-
-W życiu codziennym podobny mechanizm obserwujemy w restauracji typu fast food – liczba zamówień w toku oraz czas ich realizacji wpływają na długość kolejki i zadowolenie klientów.
-
-Z punktu widzenia inżyniera normatywy te pozwalają sterować produkcją w taki sposób, aby uniknąć przestojów i nadmiernych zapasów. Ustalenie właściwego takt time umożliwia dopasowanie liczby stanowisk roboczych do rzeczywistego popytu, a ograniczenie zapasu w toku skraca czas realizacji zamówień i szybciej ujawnia problemy jakościowe.`
-},
-
-{
-q:"39. Zasady doboru materiałów inżynierskich oraz etapy procesu projektowania materiałowego",
-a:`Dobór materiałów inżynierskich polega na wyborze takiego materiału, który najlepiej spełnia wymagania funkcjonalne, ekonomiczne i środowiskowe projektowanego wyrobu. Uwzględnia się m.in. wytrzymałość mechaniczną, masę, odporność na korozję, koszt, dostępność oraz możliwość recyklingu.
-
-W życiu codziennym przykładem jest wybór materiału na patelnię – aluminium, stal nierdzewna lub żeliwo w zależności od przeznaczenia i sposobu użytkowania.
-
-Proces projektowania materiałowego obejmuje określenie wymagań, analizę dostępnych materiałów, ocenę kosztów, wykonanie prototypów i testów oraz wybór materiału końcowego. W praktyce inżynierskiej niewłaściwy dobór materiału może prowadzić do awarii, nadmiernych kosztów lub problemów jakościowych, dlatego decyzja ta ma kluczowe znaczenie dla trwałości i niezawodności produktu.`
-},
-
-{
-q:"40. Cele i zasady sporządzania planów w przedsiębiorstwie",
-a:`Planowanie w przedsiębiorstwie polega na wyznaczaniu celów oraz określaniu działań niezbędnych do ich realizacji. Wyróżnia się plany strategiczne, taktyczne i operacyjne, które różnią się horyzontem czasowym i poziomem szczegółowości.
-
-W życiu codziennym planowanie to np. zaplanowanie budżetu domowego lub harmonogramu nauki przed ważnym egzaminem.
-
-Z punktu widzenia inżyniera planowanie umożliwia racjonalne wykorzystanie zasobów, ograniczenie ryzyka oraz kontrolę realizacji celów. Dobrze sporządzony plan uwzględnia terminy, koszty, odpowiedzialności oraz potencjalne zagrożenia, co zwiększa skuteczność działania organizacji i pozwala uniknąć chaosu organizacyjnego.`
-}
+Czynniki kształtujące podaż pracy:
+– poziom wynagrodzeń realnych,
+– struktura demograficzna społeczeństwa,
+– poziom wykształcenia i kwalifikacji,
+– mobilność zawodowa i przestrzenna.
+
+Czynniki kształtujące popyt na pracę:
+– koniunktura gospodarcza,
+– poziom technologii i automatyzacji,
+– koszty pracy,
+– wydajność pracy.
+
+Przykład z życia:
+Wzrost wynagrodzeń w sektorze IT powoduje napływ pracowników do tej branży, zwiększając podaż pracy.
+
+Przykład z firmy:
+Wdrożenie robotyzacji w zakładzie produkcyjnym zmniejsza popyt na pracę fizyczną, jednocześnie zwiększając zapotrzebowanie na inżynierów i automatyków.
+
+Zdanie-klucz:
+„Rynek pracy jest systemem dynamicznym, który inżynier zarządzania musi analizować w długim horyzoncie.”`
+                                    },
+
+                                    {
+                                        q: "6. BEZROBOCIE – RODZAJE I POMIAR",
+                                        a: `Definicja:
+Bezrobocie to sytuacja, w której osoby zdolne do pracy, gotowe do jej podjęcia i aktywnie jej poszukujące nie znajdują zatrudnienia.
+
+Rodzaje bezrobocia:
+– bezrobocie frykcyjne – krótkookresowe, wynikające ze zmiany miejsca pracy,
+– bezrobocie strukturalne – wynikające z niedopasowania kwalifikacji do potrzeb rynku,
+– bezrobocie cykliczne – związane z fazami cyklu koniunkturalnego,
+– bezrobocie długookresowe – trwające powyżej 12 miesięcy.
+
+Pomiar bezrobocia:
+– stopa bezrobocia – relacja liczby bezrobotnych do liczby osób aktywnych zawodowo.
+
+Przykład z życia:
+Absolwent uczelni technicznej poszukujący pierwszej pracy doświadcza bezrobocia frykcyjnego.
+
+Przykład z firmy:
+Likwidacja działu produkcyjnego w przedsiębiorstwie prowadzi do bezrobocia strukturalnego w regionie.
+
+Zdanie-klucz:
+„Poziom bezrobocia jest jednym z podstawowych mierników kondycji gospodarki.”`
+                                    },
+
+                                    {
+                                        q: "7. POZYTYWNE I NEGATYWNE SKUTKI BEZROBOCIA",
+                                        a: `Definicja:
+Skutki bezrobocia obejmują konsekwencje ekonomiczne, społeczne oraz psychologiczne, oddziałujące na jednostki i całą gospodarkę.
+
+Pozytywne skutki bezrobocia:
+– presja na podnoszenie kwalifikacji zawodowych,
+– większa elastyczność rynku pracy.
+
+Negatywne skutki bezrobocia:
+– spadek dochodów gospodarstw domowych,
+– marginalizacja i wykluczenie społeczne,
+– obciążenie systemu zabezpieczenia społecznego.
+
+Przykład z życia:
+Długotrwałe bezrobocie prowadzi do obniżenia standardu życia i motywacji zawodowej.
+
+Przykład z firmy:
+Niedobór pracowników na rynku pracy zmusza przedsiębiorstwo do inwestycji w automatyzację.
+
+Zdanie-klucz:
+„Bezrobocie generuje istotne koszty społeczne i ekonomiczne dla państwa.”`
+                                    },
+
+                                    {
+                                        q: "8. CYKL KONIUNKTURALNY – ISTOTA, FAZY I RODZAJE",
+                                        a: `Definicja:
+Cykl koniunkturalny to powtarzające się w czasie wahania poziomu aktywności gospodarczej, obejmujące zmiany produkcji, zatrudnienia, inwestycji oraz konsumpcji. Z punktu widzenia inżyniera zarządzania cykl koniunkturalny stanowi kluczowe tło podejmowania decyzji strategicznych i operacyjnych.
+
+Istota cyklu koniunkturalnego:
+Cykl wynika z nierównowagi pomiędzy popytem a podażą, zmian nastrojów inwestorów, polityki państwa oraz szoków zewnętrznych, takich jak kryzysy finansowe czy zmiany cen surowców.
+
+Fazy cyklu koniunkturalnego:
+– faza ekspansji – wzrost produkcji, zatrudnienia i inwestycji,
+– faza szczytu – maksymalny poziom aktywności gospodarczej,
+– faza recesji – spadek produkcji, inwestycji i zatrudnienia,
+– faza dna – najniższy poziom aktywności, punkt zwrotny cyklu.
+
+Rodzaje cykli koniunkturalnych:
+– cykl klasyczny – oparty na wahaniach realnej produkcji,
+– cykl współczesny – łagodniejszy, kształtowany przez politykę państwa.
+
+Przykład z życia:
+W okresie recesji gospodarstwa domowe ograniczają wydatki na dobra trwałe, takie jak samochody.
+
+Przykład z firmy:
+Przedsiębiorstwo w fazie spowolnienia wstrzymuje inwestycje i koncentruje się na redukcji kosztów.
+
+Zdanie-klucz:
+„Znajomość cyklu koniunkturalnego umożliwia inżynierowi zarządzania podejmowanie decyzji w odpowiednim momencie.”`
+                                    },
+
+                                    {
+                                        q: "9. POLITYKA FISKALNA – ZADANIA, CELE I INSTRUMENTY",
+                                        a: `Definicja:
+Polityka fiskalna to działania państwa polegające na kształtowaniu dochodów i wydatków publicznych w celu stabilizacji gospodarki, redystrybucji dochodów oraz stymulowania wzrostu gospodarczego.
+
+Cele polityki fiskalnej:
+– stabilizacja koniunktury gospodarczej,
+– wspieranie wzrostu gospodarczego,
+– redystrybucja dochodów,
+– finansowanie dóbr publicznych.
+
+Instrumenty polityki fiskalnej:
+– podatki bezpośrednie i pośrednie,
+– wydatki budżetowe,
+– deficyt i nadwyżka budżetowa,
+– transfery socjalne.
+
+Przykład z życia:
+Zwiększenie wydatków publicznych na infrastrukturę pobudza zatrudnienie i popyt.
+
+Przykład z firmy:
+Ulgi podatkowe zachęcają przedsiębiorstwa do realizacji nowych inwestycji.
+
+Zdanie-klucz:
+„Polityka fiskalna jest jednym z głównych narzędzi oddziaływania państwa na gospodarkę.”`
+                                    },
+
+                                    {
+                                        q: "10. POLITYKA MONETARNA – ISTOTA, CELE I INSTRUMENTY",
+                                        a: `Definicja:
+Polityka monetarna to działania banku centralnego mające na celu kontrolę podaży pieniądza oraz stabilizację poziomu cen w gospodarce.
+
+Cele polityki monetarnej:
+– utrzymanie stabilności cen,
+– ograniczanie inflacji,
+– wspieranie stabilności systemu finansowego.
+
+Instrumenty polityki monetarnej:
+– stopy procentowe – cena pieniądza w gospodarce,
+– rezerwa obowiązkowa – część depozytów banków zatrzymywana w banku centralnym,
+– operacje otwartego rynku – zakup i sprzedaż papierów wartościowych przez bank centralny.
+
+Przykład z życia:
+Podwyższenie stóp procentowych ogranicza skłonność do zaciągania kredytów.
+
+Przykład z firmy:
+Wzrost kosztu kapitału powoduje przesunięcie lub rezygnację z inwestycji.
+
+Zdanie-klucz:
+„Polityka monetarna bezpośrednio wpływa na koszt finansowania działalności przedsiębiorstw.”`
+                                    },
+
+                                    {
+                                        q: "11. GLOBALIZACJA – ISTOTA, CZYNNIKI I KONSEKWENCJE",
+                                        a: `Definicja:
+Globalizacja to proces pogłębiania się powiązań gospodarczych, społecznych i technologicznych pomiędzy państwami, prowadzący do swobodnego przepływu towarów, kapitału, informacji i siły roboczej. Z punktu widzenia inżyniera zarządzania globalizacja determinuje sposób konkurowania przedsiębiorstw.
+
+Czynniki globalizacji:
+– rozwój transportu i logistyki,
+– postęp technologiczny i cyfryzacja,
+– liberalizacja handlu międzynarodowego,
+– działalność korporacji transnarodowych.
+
+Konsekwencje globalizacji:
+– wzrost konkurencji,
+– dostęp do nowych rynków,
+– presja kosztowa,
+– ryzyko przenoszenia produkcji.
+
+Przykład z życia:
+Zakup produktów wytwarzanych w Azji i sprzedawanych w Europie.
+
+Przykład z firmy:
+Przeniesienie części produkcji do kraju o niższych kosztach pracy.
+
+Zdanie-klucz:
+„Globalizacja wymusza na przedsiębiorstwach elastyczność i innowacyjność.”`
+                                    },
+
+                                    {
+                                        q: "12. SPOŁECZNA ODPOWIEDZIALNOŚĆ BIZNESU (CSR)",
+                                        a: `Definicja:
+Społeczna odpowiedzialność biznesu, określana skrótem CSR (Corporate Social Responsibility), oznacza długofalową strategię zarządzania przedsiębiorstwem, polegającą na dobrowolnym uwzględnianiu aspektów społecznych, etycznych i środowiskowych w działalności gospodarczej oraz w relacjach z interesariuszami. Z punktu widzenia inżyniera zarządzania CSR nie jest kosztem, lecz inwestycją w trwałą wartość organizacji.
+
+Istota CSR:
+CSR zakłada, że przedsiębiorstwo odpowiada nie tylko przed właścicielami, ale także przed pracownikami, klientami, społecznością lokalną oraz środowiskiem naturalnym. Obejmuje odpowiedzialność ekonomiczną, prawną, etyczną i filantropijną.
+
+Obszary CSR:
+– odpowiedzialność wobec pracowników (bezpieczeństwo pracy, rozwój kompetencji),
+– odpowiedzialność wobec klientów (jakość, uczciwa komunikacja),
+– odpowiedzialność środowiskowa (ograniczenie emisji, gospodarka odpadami),
+– zaangażowanie społeczne i lokalne.
+
+Przykład z życia:
+Firmy handlowe wprowadzające torby wielokrotnego użytku oraz ograniczające marnowanie żywności.
+
+Przykład z firmy:
+Przedsiębiorstwo produkcyjne inwestujące w instalacje ograniczające emisję CO₂ oraz prowadzące programy rozwoju pracowników.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania społeczna odpowiedzialność biznesu jest elementem strategicznego zarządzania organizacją.”`
+                                    },
+
+                                    {
+                                        q: "13. SPOŁECZEŃSTWO OBYWATELSKIE – ISTOTA I CECHY",
+                                        a: `Definicja:
+Społeczeństwo obywatelskie to forma organizacji życia społecznego, w której obywatele dobrowolnie angażują się w działania na rzecz wspólnoty, niezależnie od struktur państwowych. Opiera się na aktywności obywateli, zaufaniu społecznym oraz przestrzeganiu prawa.
+
+Istota społeczeństwa obywatelskiego:
+Społeczeństwo obywatelskie stanowi fundament demokracji i stabilnego rozwoju gospodarczego, ponieważ umożliwia kontrolę władzy, artykulację interesów społecznych oraz współodpowiedzialność za dobro wspólne.
+
+Cechy społeczeństwa obywatelskiego:
+– aktywność i zaangażowanie obywateli,
+– istnienie organizacji pozarządowych i inicjatyw oddolnych,
+– wysoki poziom zaufania społecznego,
+– poszanowanie prawa i norm społecznych,
+– dialog między obywatelami, biznesem i administracją.
+
+Przykład z życia:
+Działalność fundacji, stowarzyszeń oraz udział obywateli w konsultacjach społecznych.
+
+Przykład z firmy:
+Przedsiębiorstwo prowadzące dialog z lokalną społecznością przy planowaniu inwestycji infrastrukturalnej.
+
+Zdanie-klucz:
+„Silne społeczeństwo obywatelskie sprzyja stabilności społecznej i przewidywalności warunków prowadzenia działalności gospodarczej.”`
+                                    },
+
+                                    {
+                                        q: "14. PODSTAWOWE ZASADY EFEKTYWNEJ KOMUNIKACJI SPOŁECZNEJ",
+                                        a: `Definicja:
+Efektywna komunikacja społeczna to proces przekazywania informacji pomiędzy nadawcą a odbiorcą w sposób zrozumiały, jednoznaczny i skuteczny, prowadzący do osiągnięcia zamierzonego celu komunikacyjnego. Z punktu widzenia inżyniera zarządzania komunikacja społeczna jest kluczowym narzędziem koordynacji działań ludzi i zespołów.
+
+Istota komunikacji społecznej:
+Komunikacja obejmuje nie tylko przekaz werbalny, ale również niewerbalny oraz kontekst sytuacyjny. Skuteczność komunikacji zależy od jasności przekazu, kanału komunikacji oraz zdolności odbiorcy do jego interpretacji.
+
+Podstawowe zasady efektywnej komunikacji:
+– jasność i precyzja przekazu,
+– dostosowanie języka do odbiorcy,
+– aktywne słuchanie i informacja zwrotna,
+– spójność komunikatów werbalnych i niewerbalnych,
+– empatia i szacunek wobec rozmówcy.
+
+Przykład z życia:
+Nieprecyzyjne polecenia w życiu codziennym prowadzą do nieporozumień i konfliktów.
+
+Przykład z firmy:
+Brak jasnej komunikacji między działami produkcji i logistyki skutkuje opóźnieniami realizacji zamówień.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania skuteczna komunikacja jest fundamentem sprawnego funkcjonowania organizacji.”`
+                                    },
+
+                                    {
+                                        q: "15. CECHY SPOŁECZNO-DEMOGRAFICZNE WSPÓŁCZESNEGO SPOŁECZEŃSTWA",
+                                        a: `Definicja:
+Cechy społeczno-demograficzne to zbiór charakterystyk opisujących strukturę społeczeństwa pod względem wieku, płci, wykształcenia, miejsca zamieszkania oraz aktywności zawodowej. Z punktu widzenia inżyniera zarządzania stanowią one podstawę analiz rynku pracy i konsumentów.
+
+Istota analizy społeczno-demograficznej:
+Analiza ta pozwala przewidywać zmiany popytu, dostępność siły roboczej oraz potrzeby społeczne, co ma kluczowe znaczenie dla planowania strategicznego.
+
+Główne cechy współczesnego społeczeństwa:
+– starzenie się populacji,
+– urbanizacja,
+– wzrost poziomu wykształcenia,
+– migracje zarobkowe,
+– zróżnicowanie stylów życia.
+
+Przykład z życia:
+Starzenie się społeczeństwa powoduje wzrost zapotrzebowania na usługi opiekuńcze i medyczne.
+
+Przykład z firmy:
+Przedsiębiorstwo dostosowuje ofertę produktów do potrzeb różnych grup wiekowych.
+
+Zdanie-klucz:
+„Analiza cech społeczno-demograficznych umożliwia racjonalne planowanie zasobów ludzkich i oferty rynkowej.”`
+                                    },
+
+                                    {
+                                        q: "1. METODY ANALIZY STRATEGICZNEJ",
+                                        a: `Definicja:
+Metody analizy strategicznej to zestaw narzędzi i technik analitycznych wykorzystywanych do oceny sytuacji przedsiębiorstwa, jego otoczenia oraz potencjału rozwojowego, w celu formułowania i wyboru długookresowych kierunków rozwoju. Z punktu widzenia inżyniera zarządzania są one podstawą racjonalnego podejmowania decyzji strategicznych.
+
+Istota analizy strategicznej:
+Analiza strategiczna pozwala zidentyfikować mocne i słabe strony organizacji, a także szanse i zagrożenia wynikające z otoczenia. Umożliwia ograniczenie ryzyka decyzyjnego i lepsze dostosowanie strategii do realnych warunków rynkowych.
+
+Podstawowe metody analizy strategicznej:
+– analiza SWOT (Strengths, Weaknesses, Opportunities, Threats) – identyfikuje mocne i słabe strony przedsiębiorstwa oraz szanse i zagrożenia w otoczeniu,
+– analiza PESTEL – ocenia wpływ czynników politycznych, ekonomicznych, społecznych, technologicznych, ekologicznych i prawnych,
+– analiza pięciu sił Portera – bada intensywność konkurencji w sektorze,
+– analiza kluczowych czynników sukcesu.
+
+Przykład z życia:
+Osoba planująca własną działalność analizuje swoje kompetencje, sytuację rynkową i bariery wejścia.
+
+Przykład z firmy:
+Przedsiębiorstwo produkcyjne wykorzystuje analizę SWOT przed wejściem na nowy rynek zagraniczny.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania analiza strategiczna jest fundamentem skutecznego planowania rozwoju przedsiębiorstwa.”`
+                                    },
+
+                                    {
+                                        q: "2. FORMY I TYPY ORGANIZACJI PRODUKCJI",
+                                        a: `Definicja:
+Organizacja produkcji to sposób uporządkowania zasobów ludzkich, materialnych i technicznych w celu sprawnego wytwarzania wyrobów lub świadczenia usług. Dla inżyniera zarządzania jest to kluczowy obszar optymalizacji efektywności operacyjnej.
+
+Formy organizacji produkcji:
+– produkcja jednostkowa – wytwarzanie pojedynczych, unikatowych wyrobów,
+– produkcja seryjna – wytwarzanie powtarzalnych partii produktów,
+– produkcja masowa – ciągłe wytwarzanie dużych ilości identycznych wyrobów.
+
+Typy organizacji produkcji:
+– produkcja potokowa,
+– produkcja niepotokowa,
+– produkcja gniazdowa.
+
+Przykład z życia:
+Produkcja mebli na indywidualne zamówienie klienta ma charakter jednostkowy.
+
+Przykład z firmy:
+Fabryka samochodów stosuje produkcję masową w układzie potokowym.
+
+Zdanie-klucz:
+„Dobór formy organizacji produkcji bezpośrednio wpływa na koszty, jakość i terminowość realizacji zleceń.”`
+                                    },
+
+                                    {
+                                        q: "3. FAZY PLANOWANIA JAKOŚCI",
+                                        a: `Definicja:
+Planowanie jakości to uporządkowany i systemowy proces zarządzania, którego celem jest zapewnienie, że wyrób lub usługa spełnią wymagania klienta, norm technicznych oraz założone cele organizacji. Z punktu widzenia inżyniera zarządzania planowanie jakości jest działaniem prewencyjnym, którego zadaniem jest eliminacja potencjalnych problemów jeszcze przed rozpoczęciem produkcji lub świadczenia usługi.
+
+Istota planowania jakości:
+Istotą planowania jakości jest odejście od podejścia reaktywnego, polegającego na wykrywaniu i usuwaniu błędów, na rzecz podejścia zapobiegawczego, w którym jakość jest projektowana już na etapie koncepcji produktu i procesu. Planowanie jakości integruje wymagania klienta z możliwościami technologicznymi przedsiębiorstwa.
+
+Rozszerzone fazy planowania jakości:
+– identyfikacja potrzeb i oczekiwań klienta, zarówno jawnych, jak i ukrytych,
+– analiza wymagań prawnych, normatywnych i branżowych,
+– przełożenie wymagań klienta na mierzalne parametry techniczne i jakościowe,
+– projektowanie procesu zdolnego do stabilnego spełniania wymagań,
+– zaplanowanie punktów kontrolnych i metod monitorowania jakości,
+– przygotowanie dokumentacji jakościowej i odpowiedzialności,
+– wdrożenie, nadzór oraz ciągłe doskonalenie procesu.
+
+Przykład z życia:
+Producent sprzętu AGD projektuje pralkę w taki sposób, aby była bezpieczna, energooszczędna i intuicyjna w obsłudze, zanim trafi do masowej produkcji.
+
+Przykład z firmy:
+Przedsiębiorstwo wdraża system zarządzania jakością zgodny z normą ISO 9001, definiując cele jakościowe, procedury oraz wskaźniki ich realizacji.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania planowanie jakości jest tańsze i skuteczniejsze niż kontrola końcowa.”`
+                                    },
+
+                                    {
+                                        q: "4. RAPORT A3 I METODA 8D – KOMPLEKSOWE ROZWIĄZYWANIE PROBLEMÓW",
+                                        a: `Definicja:
+Raport A3 to narzędzie zarządzania problemami wywodzące się z koncepcji Lean Management, polegające na logicznym i syntetycznym przedstawieniu problemu, analizy jego przyczyn oraz działań korygujących na jednej stronie formatu A3. Metoda 8D (Eight Disciplines) to sformalizowany, zespołowy proces rozwiązywania problemów jakościowych, szczególnie w środowisku produkcyjnym.
+
+Istota raportu A3:
+Istotą raportu A3 jest wymuszenie myślenia procesowego, opartego na faktach i danych, a nie na opiniach. Narzędzie to integruje analizę problemu, podejmowanie decyzji oraz uczenie się organizacji.
+
+Etapy raportu A3:
+– precyzyjne zdefiniowanie problemu i celu,
+– opis stanu obecnego z wykorzystaniem danych,
+– analiza przyczyn źródłowych problemu,
+– zaplanowanie działań korygujących i zapobiegawczych,
+– standaryzacja i utrwalenie rozwiązań.
+
+Istota metody 8D:
+Metoda 8D opiera się na pracy zespołowej oraz trwałym eliminowaniu przyczyn problemów, a nie tylko ich skutków. Jest szczególnie ceniona w branżach o wysokich wymaganiach jakościowych.
+
+Etapy metody 8D:
+D1 – powołanie zespołu,
+D2 – dokładny opis problemu,
+D3 – działania natychmiastowe,
+D4 – analiza przyczyn źródłowych,
+D5 – wybór działań korygujących,
+D6 – wdrożenie działań,
+D7 – zapobieganie powtórzeniom,
+D8 – podsumowanie i wnioski.
+
+Przykład z życia:
+Analiza powtarzających się reklamacji usług logistycznych i wprowadzenie trwałych usprawnień.
+
+Przykład z firmy:
+Zakład motoryzacyjny wykorzystuje metodę 8D do obsługi reklamacji klienta OEM, dokumentując przyczyny i działania naprawcze.
+
+Zdanie-klucz:
+„Raport A3 i metoda 8D są narzędziami systemowego uczenia się organizacji, a nie jedynie reagowania na problemy.”`
+                                    },
+
+                                    {
+                                        q: "5. TRADYCYJNE I WSPÓŁCZESNE NARZĘDZIA ZARZĄDZANIA JAKOŚCIĄ",
+                                        a: `Definicja:
+Narzędzia zarządzania jakością to metody analityczne i organizacyjne wspierające planowanie, kontrolę, ocenę oraz doskonalenie procesów. Z punktu widzenia inżyniera zarządzania stanowią one podstawę podejmowania decyzji opartych na danych.
+
+Istota stosowania narzędzi jakości:
+Celem stosowania narzędzi jakości jest identyfikacja przyczyn problemów, ograniczanie zmienności procesów oraz ciągłe doskonalenie efektywności i jakości.
+
+Tradycyjne narzędzia zarządzania jakością:
+– diagram Ishikawy – analiza przyczynowo-skutkowa problemów,
+– diagram Pareto-Lorenza – identyfikacja kluczowych przyczyn problemów,
+– karty kontrolne – monitorowanie stabilności procesu,
+– histogram – analiza rozkładu danych.
+
+Współczesne narzędzia zarządzania jakością:
+– FMEA (Failure Mode and Effects Analysis – analiza rodzajów i skutków wad),
+– SPC (Statistical Process Control – statystyczna kontrola procesu),
+– Six Sigma – metoda redukcji zmienności procesów,
+– Lean Management – koncepcja eliminacji marnotrawstwa.
+
+Przykład z życia:
+Analiza przyczyn opóźnień realizacji projektów i eliminacja wąskich gardeł.
+
+Przykład z firmy:
+Przedsiębiorstwo produkcyjne stosuje FMEA już na etapie projektowania procesu, aby zapobiec potencjalnym wadom.
+
+Zdanie-klucz:
+„Dobór narzędzi jakości powinien wynikać z dojrzałości organizacji i charakteru procesu.”`
+                                    },
+
+                                    {
+                                        q: "6. DECYZJE STRATEGICZNE W FAZIE PROJEKTOWANIA SYSTEMU PRODUKCYJNEGO I USŁUGOWEGO",
+                                        a: `Definicja:
+Decyzje strategiczne w fazie projektowania systemu produkcyjnego i usługowego to długookresowe decyzje menedżerskie dotyczące struktury, technologii, lokalizacji oraz organizacji systemu wytwarzania lub świadczenia usług. Z punktu widzenia inżyniera zarządzania są to decyzje o fundamentalnym znaczeniu, ponieważ ich skutki są trudne do odwrócenia i determinują efektywność przedsiębiorstwa przez wiele lat.
+
+Istota decyzji strategicznych:
+Istotą tych decyzji jest takie zaprojektowanie systemu, aby zapewniał on równowagę pomiędzy kosztami, jakością, elastycznością i zdolnością reagowania na potrzeby rynku. Decyzje te podejmowane są w warunkach niepewności i wymagają analizy zarówno czynników technicznych, jak i ekonomicznych oraz organizacyjnych.
+
+Główne obszary decyzji strategicznych:
+– wybór rodzaju systemu produkcyjnego lub usługowego,
+– decyzje dotyczące zdolności produkcyjnych i skali działania,
+– wybór technologii i stopnia automatyzacji,
+– lokalizacja zakładów produkcyjnych lub punktów usługowych,
+– organizacja przepływu materiałów, informacji i ludzi,
+– projektowanie struktury organizacyjnej.
+
+Znaczenie decyzji strategicznych:
+Decyzje podjęte na etapie projektowania wpływają bezpośrednio na koszty jednostkowe, czas realizacji zamówień, poziom jakości oraz konkurencyjność przedsiębiorstwa.
+
+Przykład z życia:
+Wybór przez sieć restauracji formatu lokali typu fast food zamiast restauracji pełnoserwisowych determinuje sposób obsługi klienta, liczbę pracowników i koszty działalności.
+
+Przykład z firmy:
+Przedsiębiorstwo produkcyjne decyduje się na budowę nowego zakładu o wysokim stopniu automatyzacji, co zwiększa nakłady inwestycyjne, ale obniża koszty pracy i poprawia powtarzalność jakości.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania decyzje strategiczne w projektowaniu systemów produkcyjnych determinują długofalową konkurencyjność przedsiębiorstwa.”`
+                                    },
+
+                                    {
+                                        q: "7. NORMATYWY STEROWANIA PRZEPŁYWEM PRODUKCJI",
+                                        a: `Definicja:
+Normatywy sterowania przepływem produkcji to ustalone wielkości normatywne i wskaźniki służące do planowania, organizowania i kontrolowania przebiegu procesu produkcyjnego w czasie i przestrzeni. Z punktu widzenia inżyniera zarządzania normatywy te umożliwiają racjonalne zarządzanie przepływem materiałów i informacji.
+
+Istota normatywów:
+Istotą normatywów jest zapewnienie płynności produkcji, ograniczenie przestojów oraz minimalizacja zapasów w toku produkcji, przy jednoczesnym zachowaniu terminowości realizacji zleceń.
+
+Podstawowe normatywy sterowania przepływem produkcji:
+– normatyw zapasu produkcji w toku,
+– normatyw cyklu produkcyjnego,
+– normatyw wielkości partii produkcyjnej,
+– normatyw przepustowości stanowisk roboczych,
+– normatyw czasu przezbrojeń.
+
+Znaczenie normatywów:
+Prawidłowo ustalone normatywy pozwalają na synchronizację pracy poszczególnych stanowisk, redukcję marnotrawstwa oraz poprawę efektywności całego systemu produkcyjnego.
+
+Przykład z życia:
+Planowanie prac remontowych w taki sposób, aby ograniczyć przestoje i skrócić czas realizacji zadania.
+
+Przykład z firmy:
+Zakład produkcyjny stosuje normatywy wielkości partii i czasu cyklu w systemie planowania produkcji MRP.
+
+Zdanie-klucz:
+„Normatywy sterowania przepływem produkcji są narzędziem utrzymania równowagi pomiędzy wydajnością a elastycznością systemu.”`
+                                    },
+
+                                    {
+                                        q: "8. ZASADY DOBORU MATERIAŁÓW INŻYNIERSKICH ORAZ ETAPY PROCESU PROJEKTOWANIA MATERIAŁOWEGO",
+                                        a: `Definicja:
+Dobór materiałów inżynierskich to proces decyzyjny polegający na wyborze takiego materiału, który w danych warunkach eksploatacyjnych spełni wymagania funkcjonalne, wytrzymałościowe, technologiczne, ekonomiczne oraz środowiskowe. Z punktu widzenia inżyniera zarządzania jest to decyzja o charakterze strategiczno-technologicznym, wpływająca na koszty, jakość, trwałość i konkurencyjność wyrobu.
+
+Istota doboru materiałów:
+Istotą doboru materiałów jest znalezienie kompromisu pomiędzy wymaganiami technicznymi a ograniczeniami ekonomicznymi i technologicznymi. Materiał musi nie tylko spełniać funkcję techniczną, ale również być możliwy do przetworzenia, dostępny na rynku i opłacalny w całym cyklu życia produktu.
+
+Podstawowe zasady doboru materiałów inżynierskich:
+– zgodność właściwości mechanicznych z warunkami obciążenia,
+– odporność na warunki środowiskowe (temperatura, korozja, zużycie),
+– podatność na procesy technologiczne (obróbka, spawanie, formowanie),
+– dostępność i powtarzalność jakości materiału,
+– koszt materiału oraz koszt jego przetwarzania i eksploatacji,
+– możliwość recyklingu i wpływ na środowisko.
+
+Etapy procesu projektowania materiałowego:
+– analiza funkcji elementu i warunków jego pracy,
+– określenie wymagań technicznych i normatywnych,
+– wstępny dobór grup materiałów,
+– analiza porównawcza wariantów materiałowych,
+– wybór materiału optymalnego,
+– weryfikacja doboru w warunkach eksploatacyjnych.
+
+Przykład z życia:
+Dobór materiału na ramę roweru – aluminium, stal lub kompozyt – zależnie od przeznaczenia, ceny i wytrzymałości.
+
+Przykład z firmy:
+Producent maszyn przemysłowych dobiera stal stopową zamiast konstrukcyjnej zwykłej, aby zwiększyć trwałość elementów przy pracy ciągłej.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania właściwy dobór materiału decyduje o sukcesie technicznym i ekonomicznym wyrobu.”`
+                                    },
+
+                                    {
+                                        q: "9. TRWAŁOŚĆ ZMĘCZENIOWA ELEMENTÓW MASZYN",
+                                        a: `Definicja:
+Trwałość zmęczeniowa elementów maszyn to zdolność materiału i konstrukcji do przenoszenia obciążeń zmiennych w czasie bez wystąpienia pęknięcia lub zniszczenia. Jest to jedno z kluczowych zagadnień projektowania maszyn i urządzeń pracujących w warunkach obciążeń cyklicznych.
+
+Istota zjawiska zmęczenia:
+Zmęczenie materiału polega na stopniowym narastaniu mikrouszkodzeń struktury materiału pod wpływem powtarzalnych obciążeń, nawet jeśli ich wartość jest znacznie mniejsza od wytrzymałości statycznej materiału.
+
+Czynniki wpływające na trwałość zmęczeniową:
+– amplituda i charakter obciążeń,
+– liczba cykli obciążeniowych,
+– właściwości materiału,
+– jakość powierzchni elementu,
+– obecność karbów i koncentratorów naprężeń,
+– warunki środowiskowe.
+
+Znaczenie trwałości zmęczeniowej:
+Uwzględnienie trwałości zmęczeniowej pozwala zapobiegać nagłym i niebezpiecznym awariom maszyn, które mogą prowadzić do strat finansowych i zagrożeń bezpieczeństwa.
+
+Przykład z życia:
+Pękanie metalowych elementów w rowerze lub samochodzie po długotrwałym użytkowaniu.
+
+Przykład z firmy:
+Projektowanie wałów napędowych z uwzględnieniem obciążeń zmiennych w maszynach przemysłowych.
+
+Zdanie-klucz:
+„Trwałość zmęczeniowa jest kluczowym kryterium niezawodności elementów maszyn pracujących cyklicznie.”`
+                                    },
+
+                                    {
+                                        q: "10. METODY I NARZĘDZIA OCENY KONDYCJI FINANSOWEJ PRZEDSIĘBIORSTWA",
+                                        a: `Definicja:
+Ocena kondycji finansowej przedsiębiorstwa to kompleksowy proces analityczny polegający na badaniu zdolności firmy do bieżącego regulowania zobowiązań, generowania zysku, finansowania rozwoju oraz utrzymania długoterminowej stabilności finansowej. Z punktu widzenia inżyniera zarządzania analiza finansowa jest narzędziem wspierającym racjonalne decyzje strategiczne i operacyjne.
+
+Istota oceny kondycji finansowej:
+Istotą analizy finansowej jest identyfikacja mocnych i słabych stron przedsiębiorstwa w obszarze finansów oraz wczesne wykrywanie zagrożeń płynności, zadłużenia lub rentowności. Analiza ta umożliwia ocenę efektywności wykorzystania zasobów oraz bezpieczeństwa finansowego organizacji.
+
+Podstawowe metody oceny kondycji finansowej:
+– analiza wstępna sprawozdań finansowych (bilans, rachunek zysków i strat, rachunek przepływów pieniężnych),
+– analiza wskaźnikowa,
+– analiza porównawcza w czasie i z konkurencją,
+– analiza przepływów pieniężnych (cash flow),
+– analiza progowa i scenariuszowa.
+
+Kluczowe grupy wskaźników finansowych:
+– wskaźniki płynności finansowej – zdolność do regulowania zobowiązań krótkoterminowych,
+– wskaźniki zadłużenia – struktura finansowania majątku,
+– wskaźniki rentowności – efektywność generowania zysku,
+– wskaźniki sprawności działania – efektywność wykorzystania majątku.
+
+Znaczenie analizy finansowej:
+Analiza kondycji finansowej stanowi podstawę decyzji inwestycyjnych, kredytowych, restrukturyzacyjnych oraz rozwojowych.
+
+Przykład z życia:
+Osoba planująca kredyt analizuje swoje dochody, wydatki i zdolność do spłaty zobowiązań.
+
+Przykład z firmy:
+Zarząd przedsiębiorstwa analizuje wskaźniki płynności i zadłużenia przed podjęciem decyzji o nowej inwestycji.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania kondycja finansowa przedsiębiorstwa wyznacza realne granice jego rozwoju.”`
+                                    },
+
+                                    {
+                                        q: "11. ZNACZENIE BADAŃ RYNKOWYCH I MARKETINGOWYCH W PRZEDSIĘBIORSTWIE",
+                                        a: `Definicja:
+Badania rynkowe i marketingowe to systematyczny proces gromadzenia, przetwarzania i analizowania informacji o rynku, klientach, konkurencji oraz otoczeniu przedsiębiorstwa w celu ograniczenia ryzyka decyzyjnego. Z punktu widzenia inżyniera zarządzania są one podstawą podejmowania decyzji dotyczących produktów, cen, dystrybucji i komunikacji.
+
+Istota badań rynkowych:
+Istotą badań rynkowych jest dostarczanie wiarygodnych danych, które pozwalają przedsiębiorstwu dostosować ofertę do realnych potrzeb rynku, a nie opierać się wyłącznie na intuicji decydentów.
+
+Rodzaje badań marketingowych:
+– badania rynku i jego struktury,
+– badania zachowań i preferencji konsumentów,
+– badania konkurencji,
+– badania skuteczności działań marketingowych,
+– badania satysfakcji i lojalności klientów.
+
+Znaczenie badań marketingowych:
+Badania marketingowe umożliwiają właściwe pozycjonowanie produktu, ograniczenie ryzyka wprowadzania nowych wyrobów oraz optymalizację działań marketingowych.
+
+Przykład z życia:
+Firma przed wprowadzeniem nowego produktu analizuje potrzeby klientów i akceptowalny poziom ceny.
+
+Przykład z firmy:
+Przedsiębiorstwo usługowe prowadzi badania satysfakcji klientów w celu poprawy jakości obsługi.
+
+Zdanie-klucz:
+„Badania rynkowe pozwalają podejmować decyzje marketingowe w oparciu o dane, a nie przypuszczenia.”`
+                                    },
+
+                                    {
+                                        q: "12. CELE I ZASADY SPORZĄDZANIA PLANÓW W PRZEDSIĘBIORSTWIE",
+                                        a: `Definicja:
+Planowanie w przedsiębiorstwie to proces systematycznego wyznaczania celów organizacji oraz określania działań, zasobów i terminów niezbędnych do ich osiągnięcia. Z punktu widzenia inżyniera zarządzania planowanie jest podstawową funkcją zarządzania, integrującą cele strategiczne z codziennym funkcjonowaniem przedsiębiorstwa.
+
+Istota planowania:
+Istotą planowania jest zmniejszenie niepewności działania poprzez świadome przygotowanie organizacji na przyszłość. Planowanie umożliwia koordynację działań różnych komórek organizacyjnych, racjonalne wykorzystanie zasobów oraz kontrolę realizacji założonych celów.
+
+Cele sporządzania planów:
+– wyznaczanie kierunków rozwoju przedsiębiorstwa,
+– koordynacja działań i procesów,
+– racjonalne wykorzystanie zasobów ludzkich, materialnych i finansowych,
+– ograniczenie ryzyka decyzyjnego,
+– stworzenie podstaw do kontroli i oceny wyników.
+
+Zasady sporządzania planów:
+– zasada celowości – plan musi wynikać z jasno określonych celów,
+– zasada realności – cele muszą być osiągalne przy dostępnych zasobach,
+– zasada elastyczności – możliwość modyfikacji planu w zmiennych warunkach,
+– zasada kompleksowości – uwzględnienie wszystkich obszarów działalności,
+– zasada ciągłości – planowanie jako proces stały.
+
+Rodzaje planów w przedsiębiorstwie:
+– plany strategiczne – długookresowe,
+– plany taktyczne – średniookresowe,
+– plany operacyjne – krótkookresowe.
+
+Przykład z życia:
+Planowanie budżetu domowego pozwala kontrolować wydatki i osiągać długoterminowe cele finansowe.
+
+Przykład z firmy:
+Przedsiębiorstwo opracowuje plan strategiczny rozwoju na 5 lat oraz roczne plany operacyjne dla działów.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania planowanie jest fundamentem skutecznego i przewidywalnego działania przedsiębiorstwa.”`
+                                    },
+
+                                    {
+                                        q: "13. ELEMENTY UKŁADÓW ELEKTRYCZNYCH I ELEKTRONICZNYCH",
+                                        a: `Definicja:
+Układ elektryczny i elektroniczny to zespół elementów połączonych w określony sposób w celu realizacji określonej funkcji, takiej jak zasilanie, sterowanie, przetwarzanie sygnałów lub ochrona urządzeń. Z punktu widzenia inżyniera zarządzania znajomość tych elementów jest niezbędna do rozumienia procesów technicznych i eksploatacyjnych.
+
+Istota układów elektrycznych i elektronicznych:
+Układy elektryczne służą głównie do przesyłu i przetwarzania energii elektrycznej, natomiast układy elektroniczne zajmują się przetwarzaniem informacji i sygnałów sterujących.
+
+Podstawowe elementy układów elektrycznych:
+– źródła zasilania (baterie, zasilacze),
+– przewody i połączenia,
+– rezystory,
+– wyłączniki i styczniki,
+– bezpieczniki i zabezpieczenia.
+
+Podstawowe elementy układów elektronicznych:
+– diody – przewodzenie prądu w jednym kierunku,
+– tranzystory – wzmacnianie i przełączanie sygnałów,
+– kondensatory – magazynowanie ładunku elektrycznego,
+– cewki – magazynowanie energii w polu magnetycznym,
+– układy scalone – realizacja złożonych funkcji logicznych i sterujących.
+
+Znaczenie praktyczne:
+Znajomość elementów układów umożliwia prawidłową eksploatację maszyn, diagnozowanie usterek oraz współpracę inżynierów zarządzania z działami technicznymi.
+
+Przykład z życia:
+Instalacja elektryczna w domu składająca się z przewodów, zabezpieczeń i odbiorników.
+
+Przykład z firmy:
+Linia produkcyjna wykorzystująca układy sterowania PLC oparte na elementach elektronicznych.
+
+Zdanie-klucz:
+„Zrozumienie elementów układów elektrycznych i elektronicznych pozwala inżynierowi zarządzania skutecznie zarządzać procesami technicznymi.”`
+                                    },
+
+                                    {
+                                        q: "14. PRECYZJA A DOKŁADNOŚĆ – RÓŻNICE I ZNACZENIE W PRAKTYCE INŻYNIERSKIEJ",
+                                        a: `Definicja:
+Precyzja i dokładność to dwa podstawowe pojęcia metrologiczne opisujące jakość pomiarów, które bardzo często są mylone, mimo że oznaczają różne cechy procesu pomiarowego. Z punktu widzenia inżyniera zarządzania ich rozróżnienie ma kluczowe znaczenie dla oceny jakości danych, procesów produkcyjnych oraz podejmowania decyzji opartych na pomiarach.
+
+Dokładność pomiaru:
+Dokładność oznacza stopień zgodności wyniku pomiaru z wartością rzeczywistą mierzonej wielkości.
+
+Precyzja pomiaru:
+Precyzja oznacza stopień powtarzalności wyników pomiarów.
+
+Istota różnicy między precyzją a dokładnością:
+Możliwa jest sytuacja, w której pomiary są bardzo precyzyjne, ale niedokładne, jak również pomiary dokładne, ale mało precyzyjne.
+
+Znaczenie w praktyce inżynierskiej:
+Precyzja świadczy o stabilności procesu, a dokładność o jego poprawnym ustawieniu.
+
+Przykład z życia:
+Strzelanie do tarczy ilustruje różnicę pomiędzy precyzją a dokładnością.
+
+Przykład z firmy:
+Maszyna pomiarowa CNC wykonuje powtarzalne pomiary, ale bez kalibracji generuje błędy systematyczne.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania precyzja oznacza stabilność procesu, a dokładność – jego poprawność.”`
+                                    },
+
+                                    {
+                                        q: "15. JĘZYK PROGRAMOWANIA SQL W SYSTEMACH BAZODANOWYCH",
+                                        a: `Definicja:
+SQL (Structured Query Language) to standardowy język służący do tworzenia, modyfikowania i przetwarzania danych w relacyjnych systemach bazodanowych. Z punktu widzenia inżyniera zarządzania SQL jest podstawowym narzędziem analizy danych wspierającym podejmowanie decyzji zarządczych.
+
+Istota języka SQL:
+Istotą SQL jest umożliwienie użytkownikowi logicznego dostępu do danych zapisanych w bazie.
+
+Podstawowe grupy poleceń SQL:
+– DDL (Data Definition Language),
+– DML (Data Manipulation Language),
+– DQL (Data Query Language),
+– DCL (Data Control Language).
+
+Znaczenie SQL:
+SQL jest fundamentem działania systemów ERP, CRM i raportowych.
+
+Przykład z życia:
+Analiza historii zakupów klientów w sklepie internetowym.
+
+Przykład z firmy:
+Inżynier zarządzania wykorzystuje SQL do raportów sprzedaży.
+
+Zdanie-klucz:
+„SQL przekształca dane operacyjne w informacje wspierające decyzje zarządcze.”`
+                                    },
+
+                                    {
+                                        q: "16. KONCEPCJA KAIZEN I JEJ ZASTOSOWANIE W PRACY INŻYNIERSKIEJ",
+                                        a: `Definicja:
+Kaizen to japońska koncepcja zarządzania oparta na idei ciągłego, stopniowego doskonalenia wszystkich obszarów funkcjonowania organizacji przy zaangażowaniu całej załogi. Termin „Kaizen” oznacza dosłownie „zmianę na lepsze”. Z punktu widzenia inżyniera zarządzania Kaizen jest filozofią pracy, a nie jednorazowym projektem usprawnień.
+
+Istota koncepcji Kaizen:
+Istotą Kaizen jest systematyczne identyfikowanie i eliminowanie marnotrawstwa (strat) w procesach poprzez niewielkie, ale regularne usprawnienia. Kaizen zakłada, że najlepsze pomysły doskonalące pochodzą od pracowników bezpośrednio realizujących procesy.
+
+Podstawowe założenia Kaizen:
+– ciągłość doskonalenia zamiast rewolucyjnych zmian,
+– zaangażowanie wszystkich pracowników,
+– koncentracja na procesach, a nie tylko na wynikach,
+– standaryzacja najlepszych praktyk,
+– podejmowanie decyzji na podstawie faktów i obserwacji.
+
+Zastosowanie Kaizen w pracy inżynierskiej:
+Inżynier zarządzania wykorzystuje Kaizen do optymalizacji procesów produkcyjnych, logistycznych i usługowych, skracania czasów cyklu, poprawy jakości oraz zwiększania bezpieczeństwa pracy.
+
+Korzyści z wdrażania Kaizen:
+– wzrost efektywności procesów,
+– redukcja kosztów operacyjnych,
+– poprawa jakości i stabilności procesów,
+– wzrost zaangażowania pracowników.
+
+Przykład z życia:
+Systematyczne porządkowanie stanowiska pracy i eliminowanie zbędnych czynności w codziennych obowiązkach.
+
+Przykład z firmy:
+Zakład produkcyjny wdraża Kaizen poprzez regularne spotkania zespołów pracowniczych zgłaszających drobne usprawnienia na liniach produkcyjnych.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania Kaizen jest fundamentem kultury ciągłego doskonalenia organizacji.”`
+                                    },
+
+                                    {
+                                        q: "17. KONFLIKTY INTERPERSONALNE – WEWNĄTRZ I MIĘDZYGRUPOWE",
+                                        a: `Definicja:
+Konflikt interpersonalny to sytuacja, w której co najmniej dwie strony postrzegają swoje cele, interesy lub wartości jako sprzeczne. W organizacji konflikty mogą występować zarówno na poziomie jednostek, jak i całych zespołów. Z punktu widzenia inżyniera zarządzania konflikt jest zjawiskiem naturalnym, które wymaga umiejętnego zarządzania.
+
+Istota konfliktów w organizacji:
+Konflikty wynikają z różnic interesów, stylów pracy, komunikacji, podziału zasobów lub niejasnych ról i odpowiedzialności. Mogą mieć charakter destrukcyjny lub konstruktywny, w zależności od sposobu ich rozwiązania.
+
+Rodzaje konfliktów:
+– konflikty wewnątrzgrupowe – występujące pomiędzy członkami tego samego zespołu,
+– konflikty międzygrupowe – występujące pomiędzy różnymi działami lub zespołami.
+
+Skutki konfliktów:
+Pozytywne skutki:
+– ujawnienie problemów organizacyjnych,
+– stymulowanie innowacyjności,
+– poprawa jakości decyzji.
+
+Negatywne skutki:
+– obniżenie efektywności pracy,
+– pogorszenie relacji interpersonalnych,
+– spadek motywacji.
+
+Rola inżyniera zarządzania:
+Inżynier zarządzania powinien identyfikować źródła konfliktów, stosować odpowiednie style rozwiązywania sporów oraz dbać o komunikację i jasny podział odpowiedzialności.
+
+Przykład z życia:
+Konflikt pomiędzy współpracownikami wynikający z niejasnego podziału obowiązków.
+
+Przykład z firmy:
+Konflikt między działem produkcji a działem sprzedaży dotyczący terminów realizacji zamówień.
+
+Zdanie-klucz:
+„Umiejętne zarządzanie konfliktami pozwala przekształcić je z zagrożenia w źródło rozwoju organizacji.”`
+                                    },
+
+                                    {
+                                        q: "18. RODZAJE I METODY KONTROLI PROCESÓW PRODUKCYJNYCH",
+                                        a: `Definicja:
+Kontrola procesów produkcyjnych to zorganizowany zespół działań polegających na monitorowaniu, pomiarze i ocenie przebiegu procesu wytwarzania w celu zapewnienia zgodności wyrobów z wymaganiami technicznymi, jakościowymi i organizacyjnymi. Z punktu widzenia inżyniera zarządzania kontrola procesów jest jednym z kluczowych elementów zapewnienia stabilności, jakości i efektywności produkcji.
+
+Istota kontroli procesów produkcyjnych:
+Istotą kontroli nie jest samo wykrywanie błędów, lecz zapobieganie ich powstawaniu poprzez wczesne identyfikowanie odchyleń od założonych standardów. Nowoczesna kontrola procesów jest integralną częścią zarządzania jakością i ciągłego doskonalenia.
+
+Rodzaje kontroli procesów produkcyjnych:
+– kontrola wstępna (wejściowa),
+– kontrola międzyoperacyjna,
+– kontrola końcowa,
+– kontrola bieżąca,
+– samokontrola.
+
+Metody kontroli procesów produkcyjnych:
+– kontrola wizualna,
+– pomiary bezpośrednie i pośrednie,
+– statystyczna kontrola procesu (SPC),
+– audyty procesów,
+– testy funkcjonalne i wytrzymałościowe.
+
+Znaczenie kontroli procesów:
+Skuteczna kontrola procesów pozwala ograniczyć koszty braków, reklamacji oraz przestojów, a także zwiększyć zaufanie klientów do jakości wyrobów.
+
+Przykład z życia:
+Kontrola jakości posiłków w restauracji przed wydaniem ich klientowi.
+
+Przykład z firmy:
+Zakład produkcyjny stosuje karty kontrolne SPC do monitorowania stabilności procesu obróbki CNC.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania skuteczna kontrola procesu oznacza zapobieganie błędom, a nie ich późniejsze korygowanie.”`
+                                    },
+
+                                    {
+                                        q: "19. SYSTEMY CAD / CAM / CAx – WYKORZYSTANIE W PRACY INŻYNIERA",
+                                        a: `Definicja:
+Systemy CAD (Computer Aided Design), CAM (Computer Aided Manufacturing) oraz CAx to zintegrowane systemy komputerowego wspomagania projektowania, wytwarzania i zarządzania procesami inżynierskimi. Z punktu widzenia inżyniera zarządzania stanowią one podstawę nowoczesnego, cyfrowego zarządzania produkcją.
+
+Istota systemów CAx:
+Istotą systemów CAx jest integracja danych projektowych, technologicznych i produkcyjnych w jednym spójnym środowisku informatycznym, co umożliwia skrócenie czasu projektowania, ograniczenie błędów oraz poprawę komunikacji między działami.
+
+Charakterystyka systemów:
+– CAD – projektowanie geometryczne i funkcjonalne wyrobów,
+– CAM – przygotowanie i sterowanie procesami wytwarzania,
+– CAE – analizy i symulacje inżynierskie,
+– CAPP – planowanie procesów technologicznych.
+
+Zastosowanie systemów CAx:
+– projektowanie produktów i prototypów,
+– symulacja procesów technologicznych,
+– przygotowanie dokumentacji technicznej,
+– integracja z systemami ERP i MRP,
+– wsparcie zarządzania zmianą konstrukcyjną.
+
+Znaczenie w pracy inżyniera zarządzania:
+Systemy CAx umożliwiają podejmowanie decyzji opartych na danych, skracają czas wdrażania nowych produktów oraz zwiększają elastyczność produkcji.
+
+Przykład z życia:
+Projektowanie elementów użytkowych w programach CAD przed ich wykonaniem.
+
+Przykład z firmy:
+Przedsiębiorstwo wykorzystuje systemy CAD i CAM do projektowania i produkcji części maszyn w krótkich seriach.
+
+Zdanie-klucz:
+„Systemy CAx stanowią fundament cyfrowej transformacji procesów inżynierskich i produkcyjnych.”`
+                                    },
+
+                                    {
+                                        q: "20. DIAGRAM ISHIKAWY I PARETO–LORENZA – WYKORZYSTANIE W PRACY INŻYNIERSKIEJ",
+                                        a: `Definicja:
+Diagram Ishikawy oraz diagram Pareto–Lorenza to klasyczne narzędzia zarządzania jakością służące do identyfikacji, analizy i priorytetyzacji problemów w procesach produkcyjnych i usługowych. Z punktu widzenia inżyniera zarządzania narzędzia te wspierają podejmowanie decyzji opartych na faktach oraz skuteczne rozwiązywanie problemów.
+
+Istota diagramu Ishikawy:
+Diagram Ishikawy, zwany również diagramem przyczynowo-skutkowym lub „rybią ością”, służy do systematycznej identyfikacji potencjalnych przyczyn problemu. Jego istotą jest analiza problemu poprzez rozbicie go na główne kategorie przyczyn, takie jak: człowiek, maszyna, metoda, materiał, środowisko oraz pomiar.
+
+Zastosowanie diagramu Ishikawy:
+– identyfikacja przyczyn źródłowych niezgodności,
+– analiza problemów jakościowych i organizacyjnych,
+– praca zespołowa nad rozwiązywaniem problemów,
+– wsparcie raportów A3 i metody 8D.
+
+Istota diagramu Pareto–Lorenza:
+Diagram Pareto–Lorenza opiera się na zasadzie 80/20, zgodnie z którą niewielka liczba przyczyn odpowiada za większość skutków. Narzędzie to pozwala na ilościową ocenę problemów i wybór tych, których rozwiązanie przyniesie największe efekty.
+
+Zastosowanie diagramu Pareto–Lorenza:
+– hierarchizacja problemów jakościowych,
+– koncentracja działań doskonalących na kluczowych obszarach,
+– efektywne wykorzystanie zasobów,
+– monitorowanie efektów działań korygujących.
+
+Znaczenie w pracy inżyniera zarządzania:
+Połączenie diagramu Ishikawy i Pareto–Lorenza umożliwia najpierw identyfikację możliwych przyczyn problemu, a następnie wybór tych najistotniejszych do dalszej analizy i eliminacji.
+
+Przykład z życia:
+Analiza przyczyn opóźnień w realizacji zadań domowych poprzez identyfikację czynników i wybór najczęstszych przyczyn.
+
+Przykład z firmy:
+Zakład produkcyjny wykorzystuje diagram Ishikawy do analizy przyczyn braków, a diagram Pareto–Lorenza do wyboru kluczowych przyczyn generujących największe straty.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania narzędzia Ishikawy i Pareto pozwalają przejść od intuicji do zarządzania opartego na danych.”`
+                                    },
+
+                                    {
+                                        q: "21. ZALEŻNOŚĆ OPORU ELEKTRYCZNEGO OD ROZMIARÓW PRZEWODNIKA",
+                                        a: `Definicja:
+Opór elektryczny przewodnika to wielkość fizyczna określająca zdolność materiału do przeciwstawiania się przepływowi prądu elektrycznego. Z punktu widzenia inżyniera zarządzania zrozumienie zależności oporu od parametrów przewodnika ma znaczenie dla projektowania instalacji, efektywności energetycznej i bezpieczeństwa systemów technicznych.
+
+Istota zależności oporu elektrycznego:
+Opór elektryczny przewodnika zależy od jego długości, pola przekroju poprzecznego oraz rodzaju materiału. Zależność tę opisuje wzór: R = ρ · l / S, gdzie R to opór, ρ to rezystywność materiału, l to długość przewodnika, a S to pole przekroju poprzecznego.
+
+Wpływ rozmiarów przewodnika:
+– im większa długość przewodnika, tym większy opór elektryczny,
+– im większe pole przekroju poprzecznego, tym mniejszy opór,
+– materiał o mniejszej rezystywności charakteryzuje się mniejszym oporem.
+
+Znaczenie praktyczne:
+Niewłaściwy dobór przekroju przewodnika prowadzi do strat energii, nagrzewania się instalacji oraz ryzyka uszkodzeń i awarii.
+
+Przykład z życia:
+Zbyt cienki przedłużacz nagrzewający się podczas pracy urządzeń o dużej mocy.
+
+Przykład z firmy:
+Projektowanie instalacji elektrycznej w zakładzie produkcyjnym z uwzględnieniem długości tras kablowych i obciążeń prądowych.
+
+Zdanie-klucz:
+„Prawidłowy dobór rozmiarów przewodnika jest warunkiem bezpiecznej i energooszczędnej pracy instalacji elektrycznych.”`
+                                    },
+
+                                    {
+                                        q: "22. WADY I ZALETY ZASTOSOWANIA TWORZYW SZTUCZNYCH – RECYKLING MATERIAŁOWY",
+                                        a: `Definicja:
+Tworzywa sztuczne to grupa materiałów polimerowych otrzymywanych w wyniku procesów chemicznych, charakteryzujących się dużą różnorodnością właściwości użytkowych. Z punktu widzenia inżyniera zarządzania tworzywa sztuczne są materiałami strategicznymi, ponieważ wpływają jednocześnie na koszty produkcji, właściwości wyrobu oraz oddziaływanie przedsiębiorstwa na środowisko.
+
+Zalety stosowania tworzyw sztucznych:
+Tworzywa sztuczne cechują się niską masą własną, dobrą odpornością chemiczną, możliwością łatwego kształtowania oraz relatywnie niskimi kosztami produkcji masowej. Umożliwiają integrację funkcji, redukcję liczby elementów oraz obniżenie kosztów transportu.
+
+Wady stosowania tworzyw sztucznych:
+Do głównych wad należą ograniczona odporność na wysoką temperaturę, mniejsza wytrzymałość mechaniczna w porównaniu z metalami, starzenie się materiału oraz negatywny wpływ na środowisko naturalne w przypadku niewłaściwego zagospodarowania odpadów.
+
+Istota recyklingu materiałowego:
+Recykling materiałowy polega na ponownym przetwarzaniu odpadów z tworzyw sztucznych w celu uzyskania surowca wtórnego, który może być wykorzystany do produkcji nowych wyrobów. Jest to jeden z kluczowych elementów gospodarki o obiegu zamkniętym.
+
+Znaczenie recyklingu materiałowego:
+Recykling pozwala ograniczyć zużycie surowców pierwotnych, zmniejszyć ilość odpadów oraz obniżyć ślad środowiskowy przedsiębiorstw.
+
+Przykład z życia:
+Segregacja odpadów plastikowych i ponowne wykorzystanie przetworzonych materiałów w produktach codziennego użytku.
+
+Przykład z firmy:
+Producent opakowań stosuje granulat pochodzący z recyklingu do wytwarzania nowych opakowań technicznych.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania stosowanie tworzyw sztucznych musi uwzględniać pełny cykl życia produktu i możliwości jego recyklingu.”`
+                                    },
+
+                                    {
+                                        q: "23. ELEMENTY SKŁADOWE PROCESU PRODUKCYJNEGO, PODZIAŁ PROCESU PRODUKCYJNEGO I JEGO CECHY",
+                                        a: `Definicja:
+Proces produkcyjny to uporządkowany zbiór działań technicznych, organizacyjnych i logistycznych, których celem jest przekształcenie surowców i materiałów w gotowe wyroby. Z punktu widzenia inżyniera zarządzania proces produkcyjny stanowi podstawowy obszar optymalizacji efektywności przedsiębiorstwa.
+
+Elementy składowe procesu produkcyjnego:
+Proces produkcyjny składa się z procesu technologicznego, procesu pomocniczego, procesu transportowego, procesu magazynowania oraz procesu kontroli jakości. Wszystkie te elementy muszą być ze sobą skoordynowane w czasie i przestrzeni.
+
+Podział procesu produkcyjnego:
+– proces główny – bezpośrednie wytwarzanie wyrobu,
+– procesy pomocnicze – utrzymanie ruchu, narzędziownia,
+– procesy obsługowe – transport, magazynowanie, kontrola.
+
+Cechy procesu produkcyjnego:
+Do podstawowych cech należą ciągłość, powtarzalność, złożoność, zmienność oraz podatność na zakłócenia.
+
+Znaczenie cech procesu produkcyjnego:
+Znajomość cech procesu umożliwia jego doskonalenie, skracanie czasów realizacji oraz obniżanie kosztów jednostkowych.
+
+Przykład z życia:
+Przygotowanie posiłku w domu jako sekwencja powiązanych czynności.
+
+Przykład z firmy:
+Linia produkcyjna, w której procesy technologiczne, transportowe i kontrolne są zsynchronizowane.
+
+Zdanie-klucz:
+„Skuteczne zarządzanie procesem produkcyjnym wymaga całościowego spojrzenia na wszystkie jego elementy.”`
+                                    },
+
+                                    {
+                                        q: "24. SYSTEMY INFORMATYCZNE WSPOMAGANIA PRODUKCJI WE WSPÓŁCZESNYCH PRZEDSIĘBIORSTWACH",
+                                        a: `Definicja:
+Systemy informatyczne wspomagania produkcji to zintegrowane rozwiązania informatyczne służące do planowania, sterowania, monitorowania i optymalizacji procesów produkcyjnych w czasie rzeczywistym. Z punktu widzenia inżyniera zarządzania systemy te stanowią kluczowe narzędzie zwiększania efektywności operacyjnej, przejrzystości procesów oraz konkurencyjności przedsiębiorstwa.
+
+Istota systemów wspomagania produkcji:
+Istotą tych systemów jest integracja danych pochodzących z różnych obszarów przedsiębiorstwa – od planowania produkcji, przez realizację zleceń, aż po kontrolę jakości i utrzymanie ruchu. Dzięki temu możliwe jest podejmowanie decyzji na podstawie aktualnych i wiarygodnych informacji.
+
+Podstawowe klasy systemów informatycznych:
+– ERP (Enterprise Resource Planning),
+– MRP i MRP II (Material Requirements Planning),
+– MES (Manufacturing Execution System),
+– APS (Advanced Planning and Scheduling),
+– SCADA.
+
+Znaczenie systemów informatycznych w produkcji:
+Systemy te umożliwiają skrócenie czasów realizacji zleceń, redukcję zapasów, poprawę terminowości dostaw oraz zwiększenie stabilności procesów.
+
+Przykład z życia:
+Śledzenie statusu zamówienia w czasie rzeczywistym w systemach sprzedażowych.
+
+Przykład z firmy:
+Zakład produkcyjny wykorzystuje system MES do monitorowania wydajności maszyn i pracy operatorów.
+
+Zdanie-klucz:
+„Z punktu widzenia inżyniera zarządzania systemy informatyczne są fundamentem nowoczesnego sterowania produkcją.”`
+                                    },
+
+                                    {
+                                        q: "25. ETAPY REKRUTACJI I SELEKCJI PRACOWNIKÓW",
+                                        a: `Definicja:
+Rekrutacja i selekcja pracowników to procesy zarządzania zasobami ludzkimi polegające na pozyskiwaniu oraz wyborze kandydatów najlepiej dopasowanych do potrzeb organizacji. Z punktu widzenia inżyniera zarządzania właściwie przeprowadzony proces rekrutacji wpływa bezpośrednio na efektywność pracy zespołów i realizację celów przedsiębiorstwa.
+
+Istota rekrutacji i selekcji:
+Istotą rekrutacji jest przyciągnięcie odpowiedniej liczby kandydatów o pożądanych kompetencjach, natomiast selekcja polega na wyborze najlepszego kandydata na dane stanowisko przy użyciu obiektywnych kryteriów.
+
+Etapy procesu rekrutacji i selekcji:
+– analiza potrzeb kadrowych i opis stanowiska pracy,
+– wybór źródeł rekrutacji (wewnętrzna i zewnętrzna),
+– publikacja ogłoszenia i pozyskiwanie aplikacji,
+– wstępna selekcja dokumentów aplikacyjnych,
+– rozmowy kwalifikacyjne i testy kompetencyjne,
+– wybór kandydata i decyzja zatrudnieniowa,
+– adaptacja nowego pracownika.
+
+Znaczenie procesu rekrutacji:
+Skuteczna rekrutacja minimalizuje ryzyko rotacji pracowników, obniża koszty personalne i zwiększa efektywność organizacji.
+
+Przykład z życia:
+Proces rekrutacyjny do nowej pracy obejmujący rozmowę kwalifikacyjną i test kompetencyjny.
+
+Przykład z firmy:
+Przedsiębiorstwo produkcyjne prowadzi rekrutację inżynierów poprzez testy techniczne i rozmowy z zespołem.
+
+Zdanie-klucz:
+„Dobrze przeprowadzona rekrutacja jest inwestycją w długoterminową efektywność przedsiębiorstwa.”`
+                                    }
 
 ];
 
-questions.sort(()=>Math.random()-0.5);
-let i=0;
+/* ====================================================== */
 
-function markKnown(val) {
-  const key = questions[i].q;     // unikalne pytanie
-  progress[key] = val;            // true / false
+let pool = [...baseQuestions];
+let index = 0;
+let progress = JSON.parse(localStorage.getItem("progress")) || {};
+
+const qEl = document.getElementById("question");
+const aEl = document.getElementById("answer");
+const fEl = document.getElementById("feedback");
+const statsEl = document.getElementById("stats");
+const barEl = document.getElementById("progressFill");
+
+function render() {
+  const q = pool[index];
+  qEl.innerText = q.q;
+  aEl.innerText = q.a;
+  aEl.style.display = "none";
+  fEl.style.display = "none";
+  updateStats();
+}
+
+function updateStats() {
+  const known = Object.values(progress).filter(v => v === true).length;
+  const total = baseQuestions.length;
+  const percent = Math.round((known / total) * 100);
+  statsEl.innerText = `Opanowane: ${known}/${total} (${percent}%)`;
+  barEl.style.width = percent + "%";
+}
+
+showBtn.onclick = () => aEl.style.display = "block";
+nextBtn.onclick = () => { index = (index + 1) % pool.length; render(); };
+yesBtn.onclick = () => {
+  progress[pool[index].q] = true;
   localStorage.setItem("progress", JSON.stringify(progress));
+  pool.splice(index, 1);
+  if (index >= pool.length) index = 0;
+  render();
+};
+noBtn.onclick = () => {
+  progress[pool[index].q] = false;
+  localStorage.setItem("progress", JSON.stringify(progress));
+  fEl.innerText = "😞 Wrócimy do tego pytania";
+  fEl.style.display = "block";
+  pool.push(pool[index], pool[index], pool[index]);
+  index = (index + 1) % pool.length;
+  render();
+};
+resetBtn.onclick = () => {
+  if (!confirm("Zresetować postępy?")) return;
+  localStorage.clear();
+  pool = [...baseQuestions];
+  index = 0;
+  progress = {};
+  render();
+};
 
-  if (val === true) {
-    document.getElementById("knowNo").style.display = "none";
-  } else {
-    document.getElementById("knowYes").style.display = "none";
-    updateStats();
-  }
-}
-
-function render(){
-  if(i>=questions.length){
-    document.getElementById("card").innerHTML=
-    `<div class='end'>
-      <h2>Gratulacje 🎉</h2>
-      <p>Przeszłaś cały testownik.</p>
-      <img src='https://i.pinimg.com/474x/48/62/21/486221f9f965ab6df81986f8a9118815.jpg'>
-    </div>`;
-    return;
-    updateStats();
-  }
-  document.getElementById("counter").innerText = `Pytanie ${i+1} / ${questions.length}`;
-  document.getElementById("question").innerText = questions[i].q;
-  document.getElementById("answer").innerText = questions[i].a;
-  document.getElementById("answer").style.display = "none";
-
-  // pokaż oba przyciski na start
-document.getElementById("knowYes").style.display = "inline-block";
-document.getElementById("knowNo").style.display = "inline-block";
-
-// sprawdź czy jest zapis
-const status = progress[questions[i].q];
-if (status === true) {
-  document.getElementById("knowNo").style.display = "none";
-}
-if (status === false) {
-  document.getElementById("knowYes").style.display = "none";
-}
-}
-
-function showAnswer(){document.getElementById("answer").style.display="block";}
-function next(){i++;render();}
 render();
 </script>
+
 </body>
 </html>
