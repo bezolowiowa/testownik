@@ -8,23 +8,15 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <style>
-* { box-sizing: border-box; }
-
-:root {
-  --bg:#020617;
-  --bg-soft:rgba(2,6,23,.7);
-  --border:#1e293b;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --accent:#38bdf8;
-  --accent-strong:#0284c7;
-  --success:#16a34a;
-  --danger:#dc2626;
+*{box-sizing:border-box}
+:root{
+  --bg:#020617;--bg-soft:rgba(2,6,23,.7);--border:#1e293b;
+  --text:#e5e7eb;--muted:#94a3b8;
+  --accent:#38bdf8;--accent-strong:#0284c7;
+  --success:#16a34a;--danger:#dc2626;
 }
-
 html,body{
-  margin:0;
-  height:100%;
+  margin:0;height:100%;
   background:radial-gradient(1200px 600px at 50% -200px,#0b2a4a,var(--bg));
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
@@ -32,37 +24,19 @@ html,body{
 
 /* ===== SPLASH ===== */
 #splash{
-  position:fixed; inset:0;
+  position:fixed;inset:0;
   background:radial-gradient(circle,#1e293b,#020617);
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
   z-index:9999;
   animation:splashOut .6s ease forwards;
   animation-delay:2s;
 }
-.splash-logo{
-  width:64px; height:64px;
-  border-radius:20%;
-  animation:logoZoom 1.2s ease forwards;
-}
-.fire{
-  font-size:64px;
-  opacity:0;
-  animation:fireIn .6s ease forwards;
-  animation-delay:.9s;
-}
-@keyframes logoZoom{
-  0%{transform:scale(.3);opacity:0}
-  60%{transform:scale(1.2);opacity:1}
-  100%{transform:scale(3.5)}
-}
-@keyframes fireIn{
-  from{opacity:0;transform:scale(.6)}
-  to{opacity:1;transform:scale(1)}
-}
-@keyframes splashOut{
-  to{opacity:0;pointer-events:none}
-}
+.splash-logo{width:64px;height:64px;border-radius:20%;animation:logoZoom 1.2s ease forwards}
+.fire{font-size:64px;opacity:0;animation:fireIn .6s ease forwards;animation-delay:.9s}
+@keyframes logoZoom{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.2);opacity:1}100%{transform:scale(3.5)}}
+@keyframes fireIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes splashOut{to{opacity:0;pointer-events:none}}
 
 /* ===== APP ===== */
 .app{height:100vh;display:flex;flex-direction:column}
@@ -73,35 +47,14 @@ html,body{
 .progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent-strong),var(--accent));transition:.4s}
 
 .content{flex:1;padding:20px 16px;overflow:auto}
-.card{
-  background:var(--bg-soft);
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:22px;
-}
+.card{background:var(--bg-soft);border:1px solid var(--border);border-radius:22px;padding:22px}
 .question{font-size:22px;font-weight:600}
 .answer{display:none;margin-top:14px;font-size:17px;line-height:1.65;color:#cbd5f5}
 
-.hint{
-  display:none;
-  margin-top:12px;
-  padding:10px;
-  border-radius:12px;
-  background:rgba(220,38,38,.15);
-  color:#fecaca;
-  font-size:14px;
-}
-.info{
-  display:none;
-  margin-top:10px;
-  padding:10px;
-  border-radius:12px;
-  background:rgba(56,189,248,.15);
-  color:#bae6fd;
-  font-size:14px;
-}
+.hint{display:none;margin-top:12px;padding:10px;border-radius:12px;background:rgba(220,38,38,.15);color:#fecaca;font-size:14px}
+.info{display:none;margin-top:10px;padding:10px;border-radius:12px;background:rgba(56,189,248,.15);color:#bae6fd;font-size:14px}
 
-/* ===== BOTTOM ===== */
+/* ===== BUTTONS ===== */
 .bottom{padding:14px 16px;border-top:1px solid var(--border)}
 button{
   width:100%;margin-top:10px;padding:14px;
@@ -112,7 +65,6 @@ button{
 }
 button:active{transform:scale(.94)}
 button:disabled{opacity:.45;pointer-events:none}
-
 .yes{background:var(--success);color:#fff}
 .no{background:var(--danger);color:#fff}
 .next{background:var(--accent-strong);color:#fff}
@@ -120,24 +72,35 @@ button:disabled{opacity:.45;pointer-events:none}
 .reset{background:transparent;color:var(--muted);border:1px solid var(--border)}
 
 /* ===== CONFETTI ===== */
-.confetti{
-  position:fixed;width:8px;height:8px;top:-10px;
-  animation:fall 1.2s linear forwards;z-index:9999
+.confetti{position:fixed;width:8px;height:8px;top:-10px;animation:fall 1.2s linear forwards;z-index:9999}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:0}}
+
+/* ===== RED X ===== */
+#bigX{
+  position:fixed;inset:0;
+  display:none;
+  align-items:center;justify-content:center;
+  font-size:160px;
+  font-weight:900;
+  color:#dc2626;
+  background:rgba(2,6,23,.85);
+  z-index:9998;
+  animation:xPop .6s ease;
 }
-@keyframes fall{
-  to{transform:translateY(110vh) rotate(360deg);opacity:0}
-}
+@keyframes xPop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.2);opacity:1}100%{transform:scale(1)}}
 
 /* ===== FINISH ===== */
 #finish{
   position:fixed;inset:0;
   background:#020617;
   display:none;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  z-index:9998;
+  z-index:9999;
 }
-#finish img{max-width:90%;border-radius:18px}
+#finish img{max-width:90%;border-radius:18px;margin-bottom:16px}
+#finish video{width:90%;border-radius:18px}
 </style>
 </head>
 
@@ -152,8 +115,12 @@ button:disabled{opacity:.45;pointer-events:none}
   <div class="fire">🔥</div>
 </div>
 
+<div id="bigX">✖</div>
+
 <div id="finish">
-  <img src="https://media.makeameme.org/created/you-did-it-91b01cc1be.jpg">
+  <img src="you-did-it.jpg">
+  <video id="finishVideo" src="video.mp4" playsinline muted loop controls></video>
+  <button class="reset" id="againBtn">🔁 Ja chcę jeszcze raz!</button>
 </div>
 
 <div class="app">
@@ -167,9 +134,7 @@ button:disabled{opacity:.45;pointer-events:none}
     <div class="card">
       <div class="question" id="question"></div>
       <div class="answer" id="answer"></div>
-      <div class="hint" id="hint">
-        ⛔ Musisz zaznaczyć <b>UMIEM</b> lub <b>NIE UMIEM</b>, aby przejść dalej
-      </div>
+      <div class="hint" id="hint">⛔ Musisz zaznaczyć <b>UMIEM</b> lub <b>NIE UMIEM</b></div>
       <div class="info" id="info"></div>
     </div>
   </div>
@@ -1342,25 +1307,14 @@ Zdanie-klucz:
 ];
 /* ============================== */
 
-let pool=[...baseQuestions];
-let index=0;
-let history=[];
-let progress=JSON.parse(localStorage.getItem("progress"))||{};
-let answered=false;
-
+let pool=[...baseQuestions],index=0,history=[],progress=JSON.parse(localStorage.getItem("progress"))||{},answered=false;
 const todayKey=new Date().toISOString().slice(0,10);
 let todayCount=Number(localStorage.getItem("today-"+todayKey))||0;
 
-const qEl=question,aEl=answer,hintEl=hint,infoEl=info;
-const statsEl=stats,barEl=progressFill;
+const qEl=question,aEl=answer,hintEl=hint,infoEl=info,statsEl=stats,barEl=progressFill;
 
-function clickSoundPlay(){
-  clickSound.currentTime=0;
-  clickSound.play().catch(()=>{});
-}
-function vibrate(ms=15){
-  if(navigator.vibrate) navigator.vibrate(ms);
-}
+function click(){clickSound.currentTime=0;clickSound.play().catch(()=>{})}
+function vibrate(ms=15){navigator.vibrate&&navigator.vibrate(ms)}
 function confetti(){
   for(let i=0;i<25;i++){
     const c=document.createElement("div");
@@ -1370,6 +1324,10 @@ function confetti(){
     document.body.appendChild(c);
     setTimeout(()=>c.remove(),1200);
   }
+}
+function showX(){
+  bigX.style.display="flex";
+  setTimeout(()=>bigX.style.display="none",800);
 }
 
 function statsUpdate(){
@@ -1383,70 +1341,60 @@ function statsUpdate(){
 function render(){
   if(!pool.length){
     finish.style.display="flex";
-    setTimeout(()=>window.open("https://youtu.be/qDNu-D1mXhk","_blank"),2500);
+    finishVideo.currentTime=0;
+    finishVideo.play().catch(()=>{});
     return;
   }
   qEl.innerText=pool[index].q;
   aEl.innerText=pool[index].a;
   aEl.style.display="none";
   infoEl.style.display="none";
-
   answered=false;
   hintEl.style.display="block";
   nextBtn.disabled=true;
   prevBtn.disabled=true;
-
   statsUpdate();
 }
 
-showBtn.onclick=()=>{clickSoundPlay();vibrate();aEl.style.display="block"};
+showBtn.onclick=()=>{click();vibrate();aEl.style.display="block"};
 
 yesBtn.onclick=()=>{
-  clickSoundPlay();vibrate(40);confetti();
-  answered=true;
-  hintEl.style.display="none";
-  nextBtn.disabled=false;
-  prevBtn.disabled=false;
-
+  click();vibrate(40);confetti();
+  answered=true;hintEl.style.display="none";
   progress[pool[index].q]=true;
   localStorage.setItem("progress",JSON.stringify(progress));
-  todayCount++;
-  localStorage.setItem("today-"+todayKey,todayCount);
-
-  pool.splice(index,1);
-  if(index>=pool.length)index=0;
+  todayCount++;localStorage.setItem("today-"+todayKey,todayCount);
+  pool.splice(index,1);if(index>=pool.length)index=0;
   render();
 };
 
 noBtn.onclick=()=>{
-  clickSoundPlay();vibrate();
-  answered=true;
-  hintEl.style.display="none";
-  infoEl.innerText="ℹ️ To pytanie wróci do puli aż do momentu, gdy je opanujesz";
+  click();vibrate();showX();
+  answered=true;hintEl.style.display="none";
+  infoEl.innerText="ℹ️ To pytanie wróci do puli aż je opanujesz";
   infoEl.style.display="block";
-
   progress[pool[index].q]=false;
   localStorage.setItem("progress",JSON.stringify(progress));
-
   pool.push(pool[index],pool[index],pool[index]);
   index=(index+1)%pool.length;
   render();
 };
 
-nextBtn.onclick=()=>{if(!answered)return;clickSoundPlay();vibrate();history.push(index);index=(index+1)%pool.length;render()};
-prevBtn.onclick=()=>{if(!answered)return;clickSoundPlay();vibrate();if(!history.length)return;index=history.pop();render()};
+nextBtn.onclick=()=>{if(!answered)return;click();vibrate();history.push(index);index=(index+1)%pool.length;render()};
+prevBtn.onclick=()=>{if(!answered)return;click();vibrate();if(!history.length)return;index=history.pop();render()};
 
 resetBtn.onclick=()=>{
-  clickSoundPlay();vibrate();
-  if(!confirm("Czy na pewno chcesz zresetować cały postęp?"))return;
-
+  if(!confirm("Zresetować cały postęp?"))return;
   localStorage.clear();
-  progress={};
-  todayCount=0;
-  pool=[...baseQuestions];
-  index=0;
-  history=[];
-  render();
+  progress={};todayCount=0;pool=[...baseQuestions];
+  index=0;history=[];render();
+};
+
+againBtn.onclick=()=>{
+  localStorage.clear();
+  finish.style.display="none";
+  progress={};todayCount=0;pool=[...baseQuestions];
+  index=0;history=[];render();
 };
 
 setTimeout(()=>splash.remove(),2400);
